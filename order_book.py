@@ -13,10 +13,10 @@ class OrdType(Enum):
 
 @dataclass
 class Order:
-    order_id: int
     quantity: int
     side: Side
     ord_type: OrdType
+    order_id: int | None = None
     cancelled: bool = False
     
     price: int | None = None
@@ -108,6 +108,7 @@ class OrderBook:
             if best_price is None or (order.ord_type == OrdType.LIMIT and not crosses(best_price, order.price)):  # no more trades occur 
                 if order.ord_type == OrdType.LIMIT:
                     self.add_order(order)
+                self.timestamp += 1
                 return trade_list
             
             resting: Order = opposite_book[best_price][0] # now order object

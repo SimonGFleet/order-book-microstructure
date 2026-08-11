@@ -1,14 +1,14 @@
 from collections import deque
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, auto
 from order_book import OrderBook
 
 
 class Strategies(Enum):
-    NONE = 0
-    RANDOM = 1
-    MARKET_MAKER = 2
-    MOMENTUM = 3
+    NONE = auto()
+    RANDOM = auto()
+    MARKET_MAKER = auto()
+    MOMENTUM = auto()
 
 
 
