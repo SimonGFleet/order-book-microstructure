@@ -1,6 +1,7 @@
 from order_book import OrderBook, Order, Side, OrdType, Trade
 from agents import Agent, Strategies
-from simulation import Simulation, Request, ReqType
+from simulation import Simulation
+from requestsobj import Request, ReqType
 
 def test_empty_requests():
     sim: Simulation = Simulation()
@@ -18,13 +19,13 @@ def test_place_non_crossing_order():
         agent_id=1,
         initial_cash=1000,
         strategy=Strategies.NONE,
-        position=10,
+        initial_position=10,
         )
     sim.agents[2] = Agent(
             agent_id=2,
             initial_cash=1000,
             strategy=Strategies.NONE,
-            position=0,
+            initial_position=0,
         )
     sim.requests.append(
         Request(
@@ -58,8 +59,8 @@ def test_place_non_crossing_order():
     # the agents remain identical to their creation
     assert sim.agents[1].current_cash == 1000
     assert sim.agents[2].current_cash == 1000
-    assert sim.agents[1].position == 10
-    assert sim.agents[2].position == 0
+    assert sim.agents[1].current_position == 10
+    assert sim.agents[2].current_position == 0
 
     assert len(sim.requests) == 0
     assert len(sim.book.trades) == 0
@@ -73,13 +74,13 @@ def test_place_crossing_order():
         agent_id=1,
         initial_cash=1000,
         strategy=Strategies.NONE,
-        position=10,
+        initial_position=10,
         )
     sim.agents[2] = Agent(
             agent_id=2,
             initial_cash=1000,
             strategy=Strategies.NONE,
-            position=0,
+            initial_position=0,
         )
     sim.requests.append(
         Request(
@@ -114,8 +115,8 @@ def test_place_crossing_order():
     assert len(sim.requests) == 0
 
     assert len(sim.book.trades) == 1
-    assert sim.agents[1].position == 0
-    assert sim.agents[2].position == 10
+    assert sim.agents[1].current_position == 0
+    assert sim.agents[2].current_position == 10
     assert sim.agents[1].current_cash == 2000
     assert sim.agents[2].current_cash == 0
 
@@ -126,7 +127,7 @@ def test_cancellation_request():
         agent_id=1,
         initial_cash=1000,
         strategy=Strategies.NONE,
-        position=10,
+        initial_position=10,
         )
 
     ord1: Order = Order(

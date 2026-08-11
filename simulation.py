@@ -1,18 +1,12 @@
-from order_book import Order, Trade, OrderBook
+from order_book import Order, Trade, OrderBook, Side
 from agents import Agent
+from requestsobj import ReqType, Request
 
 from collections import deque
 from dataclasses import dataclass
 from enum import Enum
+import random
 
-class ReqType(Enum):
-    CANCEL = 'cancel'
-    PLACE = 'place'
-
-@dataclass
-class Request:
-    req_type: ReqType
-    order: Order
 
 class Simulation:
     def __init__(self):
@@ -23,10 +17,18 @@ class Simulation:
 
 
     def get_requests(self):
-        # should loop through the agents and check if any of them want to make a request
-        # ignoring the potential latency of each agent, it should get in a list/queue of orders to be executed, then randomise it
-        # has the ability to see if the agent wants to cancel their current (limit) order
-        pass 
+        temp_requests: list[Request] = []
+        
+        for agent in self.agents.values():
+            decision = agent.decide_action(self.book)
+
+            if decision is not None:
+                temp_requests.append(decision)
+
+        random.shuffle(temp_requests)
+        self.requests += temp_requests
+
+        return
 
     def apply_request(self):
         # might be apply just one order at a time, then the timestep increases
@@ -36,8 +38,16 @@ class Simulation:
             return
 
         req: Request = self.requests.popleft()
-        if req.req_type == ReqType.CANCEL:
-            self.book.cancel_order(req.order)
+        if req.req_type == ReqType.CANCEL: # cancel: needs to remove the order from the book, then change the effective stats.
+            order: Order = self.book.cancel_order(req.order)
+            if order.cancelled:
+                if order.side == Side.BID: # if we stop our buy, then we should gain effective cash again, 
+                    self.agents[order.agent_id].effective_cash += order.remaining_qty * order.price
+                elif order.side == Side.ASK:
+                    self.agents[order.agent_id].effective_position += order.remaining_qty
+                else:
+                    raise ValueError("Invalid order type")
+
         elif req.req_type == ReqType.PLACE:
             trades: list[Trade] = self.book.match_order(req.order)
             self.apply_trades(trades)
@@ -55,10 +65,9 @@ class Simulation:
                 raise ValueError("No seller agent id")
 
             self.agents[trade.buy_agent_id].current_cash -= trade.quantity * trade.price
-            self.agents[trade.buy_agent_id].position += trade.quantity
+            self.agents[trade.buy_agent_id].current_position += trade.quantity
             self.agents[trade.sell_agent_id].current_cash += trade.quantity * trade.price
-            self.agents[trade.sell_agent_id].position -= trade.quantity
-
+            self.agents[trade.sell_agent_id].current_position -= trade.quantity
 
 
     def run_sim(self, steps: int):

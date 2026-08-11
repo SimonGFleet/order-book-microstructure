@@ -108,7 +108,8 @@ class OrderBook:
             if best_price is None or (order.ord_type == OrdType.LIMIT and not crosses(best_price, order.price)):  # no more trades occur 
                 if order.ord_type == OrdType.LIMIT:
                     self.add_order(order)
-                self.timestamp += 1
+                if trade_list:
+                    self.timestamp += 1
                 return trade_list
             
             resting: Order = opposite_book[best_price][0] # now order object
@@ -146,8 +147,8 @@ class OrderBook:
                 opposite_book[best_price].popleft()
                 if not opposite_book[best_price]:
                     opposite_book.pop(best_price)
-
-        self.timestamp += 1 # only change this at the end of the match so the order is processed 'instantly'
+        if trade_list:
+            self.timestamp += 1 # only change this at the end of the match so the order is processed 'instantly'
         return trade_list
     
     def cancel_order(self, order: Order) -> Order:
@@ -176,7 +177,8 @@ class OrderBook:
             raise KeyError("No order at this price in the book")
         
         order.cancelled = found
-        self.timestamp += 1         #timestamp only increases when we actually cancel the order
+        if order.cancelled:
+            self.timestamp += 1         #timestamp only increases when we actually cancel the order
         return order
 
 

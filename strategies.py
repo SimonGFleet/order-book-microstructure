@@ -1,7 +1,9 @@
 from order_book import OrderBook, Side, Order, OrdType
 from agents import Agent
+from requestsobj import Request, ReqType
+
+
 import random
-from simulation import Request, ReqType
 
 
 class Strategy:
@@ -24,9 +26,10 @@ class Random(Strategy):
             self,
             buy_probability: float,
             sell_probability: float,
-            market_probability: float,
+            limit_probability: float,
             max_quantity: int,
             max_price_offset: int,
+            reference_price: int = 100,
             seed: int | None = None,
     ):
         if buy_probability + sell_probability > 1:
@@ -35,8 +38,8 @@ class Random(Strategy):
         if buy_probability < 0 or sell_probability < 0:
             raise ValueError("Buy/Sell probabilities must be >= 0")
 
-        if market_probability < 0:
-            raise ValueError("Market probability must be >= 0")
+        if not 0 <= limit_probability <= 1:
+            raise ValueError("Limit probability not appropriate")
 
         if max_quantity <= 0:
             raise ValueError("Max quantity must be > 0")
@@ -47,41 +50,52 @@ class Random(Strategy):
         
         self.buy_prob = buy_probability
         self.sell_prob = sell_probability
-        self.market_prob = market_probability
-        self.max_quantity = max_quantity
-        self.max_price_offset = max_price_offset
+        self.limit_prob = limit_probability
+        self.max_quantity = max_quantity            # in current setting, expectation is n / 2
+        self.max_price_offset = max_price_offset    # expectation is best_price
+        self.reference_price = reference_price
         self.rng = random.Random(seed)
 
 
 
     def decide(self, agent: Agent, book: OrderBook) -> Request | None:
-        action = self.rng.random() # returns float 0 \leq x \leq 1
-        desired_quantity = self.rng.randint(1, self.max_quantity)
-        deviation = self.rng.randint(-self.max_price_offset, self.max_price_offset)
-        type_prob = self.rng.random()
-        ord_type = OrdType.LIMIT #if type_prob < self.market_prob else OrdType.LIMIT
+        '''
+        Chooses a float in [0, 1], then based on the assigned probabilities we either attempt to buy or sell
+        Same for market order'''
+        action = self.rng.random() # buy/sell/wait
+        type_prob = self.rng.random() # market/limit
+
+        desired_quantity = self.rng.randint(1, self.max_quantity) # if we are trading: how much?
+        deviation = self.rng.randint(-self.max_price_offset, self.max_price_offset) # what price
+        
+        ord_type = OrdType.LIMIT if type_prob < self.limit_prob else OrdType.MARKET
+
         if action < self.buy_prob: # attempt to buy
             side = Side.BID
             best_bid = book.biggest_bid()
             if best_bid is None:
-                price = 100
+                price = max(1, self.reference_price + deviation)
             else:
-                price = best_bid + deviation
-            quantity = min(agent.current_cash // price, desired_quantity) 
-        elif action <= self.buy_prob + self.sell_prob:
+                price = max(1, best_bid + deviation)
+            quantity = min(agent.effective_cash // price, desired_quantity) 
+        elif action < self.buy_prob + self.sell_prob: # attempt to sell
             side = Side.ASK
             best_ask = book.smallest_ask()
             if best_ask is None:
-                price = 100
+                price = max(1, self.reference_price + deviation)
             else:
-                price = best_ask + deviation
-            quantity = min(agent.position, desired_quantity)
+                price = max(1, best_ask + deviation)
+            quantity = min(agent.effective_position, desired_quantity) # depends on current position
         else:
             return None
 
+
+
+        # if we cant afford the order or dont want one then we dont make one
         if quantity == 0:
             return None
 
+        # Create the desired order
         order = Order(
                     quantity=quantity,
                     side=side,
@@ -90,6 +104,7 @@ class Random(Strategy):
                     price=price,
                 )
 
+        # package it appropriately.
         return Request(
             ReqType.PLACE,
             order=order,

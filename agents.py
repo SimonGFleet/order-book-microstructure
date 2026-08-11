@@ -1,10 +1,12 @@
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from order_book import OrderBook
+from order_book import OrderBook, OrdType, Order, Side
+from requestsobj import Request, ReqType
+from strategies import Strategy
 
 
-class Strategies(Enum):
+'''class Strategies(Enum):
     NONE = auto()
     RANDOM = auto()
     MARKET_MAKER = auto()
@@ -12,21 +14,51 @@ class Strategies(Enum):
 
 
 
-strategy_classes = {}
+strategy_classes = {NONE:}'''
 
 @dataclass
 class Agent:
     agent_id: int
     initial_cash: int
-    strategy: Strategies = Strategies.NONE
-    position: int = 0
+    initial_position: int
+    strategy: Strategy
+    current_position: int = field(init=False)
     current_cash: int = field(init=False)
+    effective_cash: int = field(init=False)
+    effective_position: int = field(init=False)
 
     def __post_init__(self) -> None:
         self.current_cash = self.initial_cash
+        self.effective_cash = self.initial_cash
+        self.current_position = self.initial_position
+        self.effective_position = self.initial_position
 
-    def decide_action(self, book: OrderBook):
+    def decide_action(self, book: OrderBook) -> Request | None:
         # want this to call the strategy and get the result,
-        # then the simulation will call this agent.decide_action and get the request / None that is made.
-        # we should be making a request object - see simulation.py
-        result = None
+        # then the simulation will call this agent.decide_action and get the request / None that is made.    
+
+        request: Request | None = self.strategy.decide(self, book) # this should call the strategy
+
+        if request is None:
+            return None
+        else:
+            request: Request
+        # options: cancel / place
+        if request.req_type == ReqType.PLACE:
+            if request.order.ord_type == OrdType.MARKET:
+                if request.order.side == Side.BID:
+                    self.effective_cash = 0
+                else:
+                    self.effective_position -= request.order.quantity
+            else:   #limit
+                if request.order.side == Side.BID:
+                    self.effective_cash -= request.order.price * request.order.quantity
+                else:
+                    self.effective_position -= request.order.quantity
+        else:
+            pass
+
+
+
+        # want to get the result, then adjust the effective_cash, then return the result
+        # effective cash should be updated in this function instead of in the strategy function
