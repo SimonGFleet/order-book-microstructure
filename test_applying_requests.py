@@ -1,7 +1,8 @@
 from order_book import OrderBook, Order, Side, OrdType, Trade
-from agents import Agent, Strategies
+from agents import Agent
 from simulation import Simulation
 from requestsobj import Request, ReqType
+from strategies import Strategy
 
 def test_empty_requests():
     sim: Simulation = Simulation()
@@ -18,13 +19,13 @@ def test_place_non_crossing_order():
     sim.agents[1] = Agent(
         agent_id=1,
         initial_cash=1000,
-        strategy=Strategies.NONE,
+        strategy=Strategy(),
         initial_position=10,
         )
     sim.agents[2] = Agent(
             agent_id=2,
             initial_cash=1000,
-            strategy=Strategies.NONE,
+            strategy=Strategy(),
             initial_position=0,
         )
     sim.requests.append(
@@ -73,13 +74,13 @@ def test_place_crossing_order():
     sim.agents[1] = Agent(
         agent_id=1,
         initial_cash=1000,
-        strategy=Strategies.NONE,
+        strategy=Strategy(),
         initial_position=10,
         )
     sim.agents[2] = Agent(
             agent_id=2,
             initial_cash=1000,
-            strategy=Strategies.NONE,
+            strategy=Strategy(),
             initial_position=0,
         )
     sim.requests.append(
@@ -126,7 +127,7 @@ def test_cancellation_request():
     sim.agents[1] = Agent(
         agent_id=1,
         initial_cash=1000,
-        strategy=Strategies.NONE,
+        strategy=Strategy(),
         initial_position=10,
         )
 

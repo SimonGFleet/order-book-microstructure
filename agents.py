@@ -1,20 +1,17 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from strategies import Strategy
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from order_book import OrderBook, OrdType, Order, Side
 from requestsobj import Request, ReqType
-from strategies import Strategy
-
-
-'''class Strategies(Enum):
-    NONE = auto()
-    RANDOM = auto()
-    MARKET_MAKER = auto()
-    MOMENTUM = auto()
 
 
 
-strategy_classes = {NONE:}'''
 
 @dataclass
 class Agent:
@@ -55,10 +52,9 @@ class Agent:
                     self.effective_cash -= request.order.price * request.order.quantity
                 else:
                     self.effective_position -= request.order.quantity
+        
         else:
-            pass
+            pass    # we cannot cancel market orders, they should be processed immediately and do not sit in the order book
 
 
-
-        # want to get the result, then adjust the effective_cash, then return the result
-        # effective cash should be updated in this function instead of in the strategy function
+        return request

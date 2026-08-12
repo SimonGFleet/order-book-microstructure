@@ -6,13 +6,19 @@ from collections import deque
 from dataclasses import dataclass
 from enum import Enum
 import random
-
+from matplotlib import pyplot as plt
 
 class Simulation:
     def __init__(self):
         self.book: OrderBook = OrderBook()
         self.agents: dict[int, Agent] = {} # key = agent_id 
         self.requests: deque[Request] = deque() # queue of orders waiting to be applied
+        self.best_bids = []
+        self.best_asks = []
+        self.spreads = []
+        self.mid_prices = []
+        self.trade_counts = []
+        
 
 
 
@@ -51,6 +57,7 @@ class Simulation:
         elif req.req_type == ReqType.PLACE:
             trades: list[Trade] = self.book.match_order(req.order)
             self.apply_trades(trades)
+            
         else:
             raise ValueError("Request of invalid type")
         
@@ -64,13 +71,61 @@ class Simulation:
             if trade.sell_agent_id is None:
                 raise ValueError("No seller agent id")
 
-            self.agents[trade.buy_agent_id].current_cash -= trade.quantity * trade.price
-            self.agents[trade.buy_agent_id].current_position += trade.quantity
-            self.agents[trade.sell_agent_id].current_cash += trade.quantity * trade.price
-            self.agents[trade.sell_agent_id].current_position -= trade.quantity
+            price = trade.quantity * trade.price
+            qty = trade.quantity
+
+            # update the actual stats
+            self.agents[trade.buy_agent_id].current_cash -= price
+            self.agents[trade.buy_agent_id].current_position += qty
+            self.agents[trade.sell_agent_id].current_cash += price
+            self.agents[trade.sell_agent_id].current_position -= qty
+
+            # also update the effective position/cash - effective is what we use to guage whether someone can buy
+            self.agents[trade.buy_agent_id].effective_position += qty
+            self.agents[trade.sell_agent_id].effective_cash += price
 
 
-    def run_sim(self, steps: int):
-        # at each step we call get_requests and apply_request
-        pass
+    def run_sim(self, steps: int, vb: bool = True):
         
+        current_trades = 0
+        # at each step we call get_requests and apply_request
+        for i in range(steps):
+            # at each step we get requests, then apply a request
+            self.get_requests()
+
+            while self.requests:
+                self.apply_request()
+
+            best_bid = self.book.biggest_bid()
+            best_ask = self.book.smallest_ask()
+
+            self.best_bids.append(best_bid)
+            self.best_asks.append(best_ask)
+            if best_bid and best_ask:                       # if we can: fetch mid price and spread.
+                self.spreads.append(best_ask - best_bid)
+                self.mid_prices.append((best_ask + best_bid) / 2)
+            else:
+                self.spreads.append(None)
+                self.mid_prices.append(None) # still need to append something to correctly view the time series
+
+            trades_this_step = len(self.book.trades) - current_trades # feels like a long way of doing this
+            current_trades += trades_this_step
+            self.trade_counts.append(trades_this_step)
+
+
+            
+            
+    def plot(self, var):
+        conv = {"trade counts": self.trade_counts, 
+                "best bids": self.best_bids, 
+                "best asks" : self.best_asks, 
+                "price": self.mid_prices, 
+                "spread" : self.spreads}
+        if var not in conv:
+            raise ValueError("Invalid statistic to plot")
+
+        plt.plot(conv[var])
+        plt.xlabel("Time Steps")
+        plt.ylabel(var)
+        plt.title(var + "over time")
+
