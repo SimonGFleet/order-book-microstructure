@@ -13,12 +13,16 @@ class Simulation:
         self.book: OrderBook = OrderBook()
         self.agents: dict[int, Agent] = {} # key = agent_id 
         self.requests: deque[Request] = deque() # queue of orders waiting to be applied
+
+        self.order_count = 0
+
+        # Stats for viewing
         self.best_bids = []
         self.best_asks = []
         self.spreads = []
         self.mid_prices = []
         self.trade_counts = []
-        
+
 
 
 
@@ -29,7 +33,12 @@ class Simulation:
             decision = agent.decide_action(self.book)
 
             if decision is not None:
-                temp_requests.append(decision)
+
+                if decision.req_type == ReqType.PLACE:          # add order_id
+                    decision.order.order_id = self.order_count
+                    self.order_count += 1
+                
+                temp_requests.append(decision)  # add order to current requests
 
         random.shuffle(temp_requests)
         self.requests += temp_requests

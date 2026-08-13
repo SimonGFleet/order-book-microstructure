@@ -20,7 +20,7 @@ class Order:
     cancelled: bool = False
     
     price: int | None = None
-    agent_id: str | None = None
+    agent_id: int | None = None
     stock_id: int | None = None
 
     remaining_qty: int = field(init=False)
@@ -41,8 +41,8 @@ class Trade:
 class OrderBook:
 
     def __init__(self):
-        self.bids: dict[int : deque[Order]] = {} 
-        self.asks: dict[int : deque[Order]] = {} # we should have the values of keys being queues
+        self.bids: dict[int, deque[Order]] = {} 
+        self.asks: dict[int, deque[Order]] = {} # we should have the values of keys being queues
                 # could also store these as heaps? how do we get the minimum value?
                 # heap then has O(1) look up for min instead of O(n) - not currently essential, dont know how this could change.
                 # hash map has O(1) look up for any specific value - when are we looking up a specfic value and not just the minimum?

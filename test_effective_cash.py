@@ -103,11 +103,10 @@ def test_cancelling_request_returns_effective_cash():
         price=100,
         agent_id=1,
     )
+
     sim.get_requests()
     placed_order = sim.requests[0].order
     assert len(sim.requests) == 1
-
-    
 
     sim.apply_request()
 
