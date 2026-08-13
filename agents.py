@@ -19,10 +19,13 @@ class Agent:
     initial_cash: int
     initial_position: int
     strategy: Strategy
+    open_bids: list[Order] = []
+    open_asks: list[Order] = []
     current_position: int = field(init=False)
     current_cash: int = field(init=False)
     effective_cash: int = field(init=False)
     effective_position: int = field(init=False)
+
 
     def __post_init__(self) -> None:
         self.current_cash = self.initial_cash
@@ -55,6 +58,16 @@ class Agent:
         
         else:
             pass    # we cannot cancel market orders, they should be processed immediately and do not sit in the order book
+
+
+        # Add the order appropriately to the agents open orders - this gets removed elsewhere.
+        if request.req_type == ReqType.PLACE:
+            if request.order.side == Side.BID:
+                self.open_bids.append(request.order)
+            elif request.order.side == Side.ASK:
+                self.open_asks.append(request.order)
+            else:
+                raise ValueError("Invalid order side")
 
 
         return request

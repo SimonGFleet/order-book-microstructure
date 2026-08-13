@@ -66,6 +66,7 @@ class Simulation:
         elif req.req_type == ReqType.PLACE:
             trades: list[Trade] = self.book.match_order(req.order)
             self.apply_trades(trades)
+
             
         else:
             raise ValueError("Request of invalid type")

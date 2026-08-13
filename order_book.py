@@ -49,6 +49,7 @@ class OrderBook:
                     # during order cancellations and when we add orders
 
         self.trades: list[Trade] = []
+        # this is incremented after each trade
         self.timestamp = 0
 
 
