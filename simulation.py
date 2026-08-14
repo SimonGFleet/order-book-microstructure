@@ -16,6 +16,7 @@ class Simulation:
         self.requests: deque[Request] = deque() # queue of orders waiting to be applied
 
         self.order_count = 0
+        self.timestamp = 0
 
         # Stats for viewing
         self.best_bids = []
@@ -37,6 +38,7 @@ class Simulation:
 
                 if decision.req_type == ReqType.PLACE:          # add order_id
                     decision.order.order_id = self.order_count
+                    decision.order.creation_time = self.timestamp
                     self.order_count += 1
                 
                 temp_requests.append(decision)  # add order to current requests
@@ -145,6 +147,8 @@ class Simulation:
             trades_this_step = len(self.book.trades) - current_trades # feels like a long way of doing this
             current_trades += trades_this_step
             self.trade_counts.append(trades_this_step)
+            
+            self.timestamp += 1
 
 
             
