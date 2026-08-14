@@ -19,8 +19,8 @@ class Agent:
     initial_cash: int
     initial_position: int
     strategy: Strategy
-    open_bids: list[Order] = []
-    open_asks: list[Order] = []
+    open_bids: list[Order] = field(default_factory=list)
+    open_asks: list[Order] = field(default_factory=list)
     current_position: int = field(init=False)
     current_cash: int = field(init=False)
     effective_cash: int = field(init=False)

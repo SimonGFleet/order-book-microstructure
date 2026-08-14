@@ -38,6 +38,15 @@ class Trade:
     buy_agent_id: int | None = None
     sell_agent_id: int | None = None
 
+
+
+class MatchResult:
+    def __init__(self):
+        self.trades: list[Trade] = []
+        self.completed_orders: list[Order] = []
+
+    
+
 class OrderBook:
 
     def __init__(self):
@@ -87,10 +96,11 @@ class OrderBook:
             return min(self.asks) if self.asks else None
 
     # Need function to complete transactions.
-    def match_order(self, order: Order) -> list[Trade]:
+    def match_order(self, order: Order) -> MatchResult:
         if order.ord_type == OrdType.LIMIT and order.price is None:
             raise ValueError("Limit orders require a price")
-        trade_list = []
+
+        result = MatchResult()
         # should take in an order, if it is market then it should be processed immediately - granted the book remains non empty
         # if it is limit then we match at the best possible price and then add to book when we cant go any further
         # should return a list of transactions. - later can add this a data structure holding these, probably just a list.
@@ -109,9 +119,9 @@ class OrderBook:
             if best_price is None or (order.ord_type == OrdType.LIMIT and not crosses(best_price, order.price)):  # no more trades occur 
                 if order.ord_type == OrdType.LIMIT:
                     self.add_order(order)
-                if trade_list:
+                if result.trades:
                     self.timestamp += 1
-                return trade_list
+                return result
             
             resting: Order = opposite_book[best_price][0] # now order object
             if order.side == Side.BID:
@@ -137,7 +147,7 @@ class OrderBook:
                     )
             
             self.trades.append(trade)
-            trade_list.append(trade)
+            result.trades.append(trade)
 
             # update remaining quantities          
             order.remaining_qty -= traded_quantity
@@ -145,12 +155,12 @@ class OrderBook:
 
             # remove resting order if it is complete
             if resting.remaining_qty == 0:
-                opposite_book[best_price].popleft()
+                result.completed_orders.append(opposite_book[best_price].popleft())
                 if not opposite_book[best_price]:
                     opposite_book.pop(best_price)
-        if trade_list:
+        if result.trades:
             self.timestamp += 1 # only change this at the end of the match so the order is processed 'instantly'
-        return trade_list
+        return result
     
     def cancel_order(self, order: Order) -> Order:
         if order.remaining_qty == 0:

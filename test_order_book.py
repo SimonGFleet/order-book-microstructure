@@ -1,5 +1,5 @@
 #price priority, FIFO, quantities, and resting behaviour absolutely qualify.
-from order_book import OrderBook, Order, Side, OrdType, Trade
+from order_book import OrderBook, Order, Side, OrdType, Trade, MatchResult
 
 def test_bid_partially_fills_resting_ask():
     # Arrange
@@ -92,7 +92,7 @@ def test_fifo_for_same_price():
     book.match_order(second)
     book.match_order(third)
 
-    x = book.match_order(incoming_bid)
+    res: MatchResult = book.match_order(incoming_bid)
 
     assert book.bids == {}
     assert first.remaining_qty == 0
@@ -106,10 +106,10 @@ def test_fifo_for_same_price():
 
     assert book.trades[0].quantity == 100
     assert book.trades[1].quantity == 50
-    assert x[0].quantity == 100
-    assert x[1].quantity == 50
-    assert x[0].timestamp == 0
-    assert x[1].timestamp == 0
+    assert res.trades[0].quantity == 100
+    assert res.trades[1].quantity == 50
+    assert res.trades[0].timestamp == 0
+    assert res.trades[1].timestamp == 0
 
 
 def test_non_crossing_limit_order_rests():
@@ -132,12 +132,12 @@ def test_non_crossing_limit_order_rests():
     )
 
     book.match_order(resting_ask)
-    trades = book.match_order(incoming_bid)
+    res: MatchResult = book.match_order(incoming_bid)
 
     assert incoming_bid.remaining_qty == incoming_bid.quantity
     assert book.bids[100][0] is incoming_bid
     assert book.asks[105][0] is resting_ask
-    assert trades == []
+    assert res.trades == []
 
 
 
@@ -198,13 +198,13 @@ def test_multiple_orders_receive_batch_timestamps():
         side=Side.BID,
         ord_type=OrdType.MARKET,
     )
-    first_batch = book.match_order(first_bid)
+    first_result = book.match_order(first_bid)
 
-    assert len(first_batch) == 2
-    assert [trade.price for trade in first_batch] == [100, 101]
-    assert [trade.quantity for trade in first_batch] == [5, 5]
-    assert [trade.sell_order_id for trade in first_batch] == [1, 2]
-    assert [trade.timestamp for trade in first_batch] == [0, 0]
+    assert len(first_result.trades) == 2
+    assert [trade.price for trade in first_result.trades] == [100, 101]
+    assert [trade.quantity for trade in first_result.trades] == [5, 5]
+    assert [trade.sell_order_id for trade in first_result.trades] == [1, 2]
+    assert [trade.timestamp for trade in first_result.trades] == [0, 0]
     assert book.timestamp == 1
 
     second_bid = Order(
@@ -214,13 +214,13 @@ def test_multiple_orders_receive_batch_timestamps():
         ord_type=OrdType.LIMIT,
         price=102,
     )
-    second_batch = book.match_order(second_bid)
+    second_result = book.match_order(second_bid)
 
-    assert len(second_batch) == 2
-    assert [trade.price for trade in second_batch] == [101, 102]
-    assert [trade.quantity for trade in second_batch] == [2, 8]
-    assert [trade.sell_order_id for trade in second_batch] == [2, 3]
-    assert [trade.timestamp for trade in second_batch] == [1, 1]
+    assert len(second_result.trades) == 2
+    assert [trade.price for trade in second_result.trades] == [101, 102]
+    assert [trade.quantity for trade in second_result.trades] == [2, 8]
+    assert [trade.sell_order_id for trade in second_result.trades] == [2, 3]
+    assert [trade.timestamp for trade in second_result.trades] == [1, 1]
     assert book.timestamp == 2
 
     final_bid = Order(
@@ -229,13 +229,13 @@ def test_multiple_orders_receive_batch_timestamps():
         side=Side.BID,
         ord_type=OrdType.MARKET,
     )
-    final_batch = book.match_order(final_bid)
+    final_result = book.match_order(final_bid)
 
-    assert len(final_batch) == 1
-    assert final_batch[0].price == 102
-    assert final_batch[0].quantity == 1
-    assert final_batch[0].sell_order_id == 3
-    assert final_batch[0].timestamp == 2
+    assert len(final_result.trades) == 1
+    assert final_result.trades[0].price == 102
+    assert final_result.trades[0].quantity == 1
+    assert final_result.trades[0].sell_order_id == 3
+    assert final_result.trades[0].timestamp == 2
     assert book.timestamp == 3
 
     assert [trade.timestamp for trade in book.trades] == [0, 0, 1, 1, 2]
@@ -246,3 +246,7 @@ def test_multiple_orders_receive_batch_timestamps():
     assert third_ask.remaining_qty == 1
     assert book.asks[102][0] is third_ask
     assert book.bids == {}
+
+    assert first_result.completed_orders == [first_ask]
+    assert second_result.completed_orders == [second_ask]
+    assert final_result.completed_orders == []

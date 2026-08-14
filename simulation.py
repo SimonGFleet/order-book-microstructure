@@ -1,6 +1,7 @@
-from order_book import Order, Trade, OrderBook, Side
+from order_book import Order, Trade, OrderBook, Side, MatchResult
 from agents import Agent
 from requestsobj import ReqType, Request
+
 
 from collections import deque
 from dataclasses import dataclass
@@ -64,8 +65,8 @@ class Simulation:
                     raise ValueError("Invalid order type")
 
         elif req.req_type == ReqType.PLACE:
-            trades: list[Trade] = self.book.match_order(req.order)
-            self.apply_trades(trades)
+            result: MatchResult = self.book.match_order(req.order)
+            self.apply_trades(result.trades)
 
             
         else:
