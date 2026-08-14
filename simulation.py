@@ -28,7 +28,7 @@ class Simulation:
 
 
 
-    def get_requests(self):
+    def get_requests(self) -> None:
         temp_requests: list[Request] = []
         
         for agent in self.agents.values():
@@ -147,7 +147,7 @@ class Simulation:
             trades_this_step = len(self.book.trades) - current_trades # feels like a long way of doing this
             current_trades += trades_this_step
             self.trade_counts.append(trades_this_step)
-            
+
             self.timestamp += 1
 
 

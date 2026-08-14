@@ -18,7 +18,8 @@ class Order:
     ord_type: OrdType
     order_id: int | None = None
     cancelled: bool = False
-    
+
+    creation_time: int = None
     price: int | None = None
     agent_id: int | None = None
     stock_id: int | None = None
