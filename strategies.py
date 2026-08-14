@@ -69,7 +69,6 @@ class Random(Strategy):
         deviation = self.rng.randint(-self.max_price_offset, self.max_price_offset) # what price
         
         ord_type = OrdType.LIMIT if type_prob < self.limit_prob else OrdType.MARKET
-
         if action < self.buy_prob: # attempt to buy
             side = Side.BID
             best_bid = book.biggest_bid()

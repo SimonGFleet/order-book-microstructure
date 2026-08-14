@@ -1,4 +1,4 @@
-from order_book import Order, Trade, OrderBook, Side, MatchResult
+from order_book import Order, Trade, OrderBook, Side, MatchResult, OrdType
 from agents import Agent
 from requestsobj import ReqType, Request
 
@@ -59,18 +59,41 @@ class Simulation:
             if order.cancelled:
                 if order.side == Side.BID: # if we stop our buy, then we should gain effective cash again, 
                     self.agents[order.agent_id].effective_cash += order.remaining_qty * order.price
+                    self.agents[order.agent_id].open_bids.remove(order)
                 elif order.side == Side.ASK:
                     self.agents[order.agent_id].effective_position += order.remaining_qty
+                    self.agents[order.agent_id].open_asks.remove(order)
                 else:
                     raise ValueError("Invalid order type")
 
         elif req.req_type == ReqType.PLACE:
             result: MatchResult = self.book.match_order(req.order)
             self.apply_trades(result.trades)
-
+            self.update_agent_open_orders(result.completed_orders, req.order)
+            
             
         else:
             raise ValueError("Request of invalid type")
+
+    def update_agent_open_orders(self, completed: list[Order], new: Order):
+        while completed: # pop off end to get current order, then remove from agent.
+            current: Order = completed.pop()
+            if current.side == Side.BID:
+                if current in self.agents[current.agent_id].open_bids:
+                    self.agents[current.agent_id].open_bids.remove(current)
+            elif current.side == Side.ASK:
+                if current in self.agents[current.agent_id].open_asks:
+                    self.agents[current.agent_id].open_asks.remove(current)
+            else:
+                raise ValueError("Invalid order side")
+
+        if new.remaining_qty > 0 and new.ord_type == OrdType.LIMIT:
+            if new.side == Side.BID:
+                self.agents[new.agent_id].open_bids.append(new)
+            elif new.side == Side.ASK:
+                self.agents[new.agent_id].open_asks.append(new)
+            else:
+                raise ValueError("Invalid order side")
         
     def apply_trades(self, trades: list[Trade]):
         # goes through the list of trades, possibly empty

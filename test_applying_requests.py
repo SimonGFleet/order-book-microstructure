@@ -1,4 +1,4 @@
-from order_book import OrderBook, Order, Side, OrdType, Trade
+from order_book import OrderBook, Order, Side, OrdType, Trade, MatchResult
 from agents import Agent
 from simulation import Simulation
 from requestsobj import Request, ReqType
