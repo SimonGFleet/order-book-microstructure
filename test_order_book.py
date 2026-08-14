@@ -108,8 +108,8 @@ def test_fifo_for_same_price():
     assert book.trades[1].quantity == 50
     assert res.trades[0].quantity == 100
     assert res.trades[1].quantity == 50
-    assert res.trades[0].timestamp == 0
-    assert res.trades[1].timestamp == 0
+    assert res.trades[0].event_number == 0
+    assert res.trades[1].event_number == 0
 
 
 def test_non_crossing_limit_order_rests():
@@ -163,7 +163,7 @@ def test_cancel_only_order_removes_price_level():
 
 
 
-def test_multiple_orders_receive_batch_timestamps():
+def test_multiple_orders_receive_batch_event_numbers():
     book = OrderBook()
 
     first_ask = Order(
@@ -204,8 +204,8 @@ def test_multiple_orders_receive_batch_timestamps():
     assert [trade.price for trade in first_result.trades] == [100, 101]
     assert [trade.quantity for trade in first_result.trades] == [5, 5]
     assert [trade.sell_order_id for trade in first_result.trades] == [1, 2]
-    assert [trade.timestamp for trade in first_result.trades] == [0, 0]
-    assert book.timestamp == 1
+    assert [trade.event_number for trade in first_result.trades] == [0, 0]
+    assert book.event_number == 1
 
     second_bid = Order(
         order_id=5,
@@ -220,8 +220,8 @@ def test_multiple_orders_receive_batch_timestamps():
     assert [trade.price for trade in second_result.trades] == [101, 102]
     assert [trade.quantity for trade in second_result.trades] == [2, 8]
     assert [trade.sell_order_id for trade in second_result.trades] == [2, 3]
-    assert [trade.timestamp for trade in second_result.trades] == [1, 1]
-    assert book.timestamp == 2
+    assert [trade.event_number for trade in second_result.trades] == [1, 1]
+    assert book.event_number == 2
 
     final_bid = Order(
         order_id=6,
@@ -235,10 +235,10 @@ def test_multiple_orders_receive_batch_timestamps():
     assert final_result.trades[0].price == 102
     assert final_result.trades[0].quantity == 1
     assert final_result.trades[0].sell_order_id == 3
-    assert final_result.trades[0].timestamp == 2
-    assert book.timestamp == 3
+    assert final_result.trades[0].event_number == 2
+    assert book.event_number == 3
 
-    assert [trade.timestamp for trade in book.trades] == [0, 0, 1, 1, 2]
+    assert [trade.event_number for trade in book.trades] == [0, 0, 1, 1, 2]
     assert [trade.buy_order_id for trade in book.trades] == [4, 4, 5, 5, 6]
 
     assert first_ask.remaining_qty == 0

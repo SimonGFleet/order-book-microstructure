@@ -1,7 +1,5 @@
-- i have created the match result,
-- import it in orderbook and simulation
-- build a collection of all the finished orders in the matching engine
-- build the match result and return it in the matching engine done
+- need to add timesteps to the order to know how long it has been resting in the book
+- only needs to apply to market orders
 
-- in the simulation layer we need to change it so that we are using match_result.trades  done
-- then we can use match_result.completed_orders done hopefully
+
+- want to change the timestamp in orderbook to be an event counter

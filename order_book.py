@@ -34,9 +34,11 @@ class Trade:
     quantity: int
     buy_order_id: int
     sell_order_id: int
-    timestamp: int
+    event_number: int
+    timestamp: int | None = None
     buy_agent_id: int | None = None
     sell_agent_id: int | None = None
+
 
 
 
@@ -59,7 +61,7 @@ class OrderBook:
 
         self.trades: list[Trade] = []
         # this is incremented after each trade
-        self.timestamp = 0
+        self.event_number = 0
 
 
 
@@ -120,7 +122,7 @@ class OrderBook:
                 if order.ord_type == OrdType.LIMIT:
                     self.add_order(order)
                 if result.trades:
-                    self.timestamp += 1
+                    self.event_number += 1
                 return result
             
             resting: Order = opposite_book[best_price][0] # now order object
@@ -141,7 +143,7 @@ class OrderBook:
                         quantity=traded_quantity,
                         buy_order_id=buyer_id,
                         sell_order_id=seller_id,
-                        timestamp=self.timestamp,
+                        event_number=self.event_number,
                         buy_agent_id=buyer_agent_id,
                         sell_agent_id=seller_agent_id,
                     )
@@ -159,7 +161,7 @@ class OrderBook:
                 if not opposite_book[best_price]:
                     opposite_book.pop(best_price)
         if result.trades:
-            self.timestamp += 1 # only change this at the end of the match so the order is processed 'instantly'
+            self.event_number += 1 # only change this at the end of the match so the order is processed 'instantly'
         return result
     
     def cancel_order(self, order: Order) -> Order:
@@ -189,7 +191,7 @@ class OrderBook:
         
         order.cancelled = found
         if order.cancelled:
-            self.timestamp += 1         #timestamp only increases when we actually cancel the order
+            self.event_number += 1         #timestamp only increases when we actually cancel the order
         return order
 
 
