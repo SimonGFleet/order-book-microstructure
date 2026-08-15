@@ -99,7 +99,7 @@ class OrderBook:
             return min(self.asks) if self.asks else None
 
     # Need function to complete transactions.
-    def match_order(self, order: Order) -> MatchResult:
+    def match_order(self, order: Order, *, budget: int | None = None) -> MatchResult:
         if order.ord_type == OrdType.LIMIT and order.price is None:
             raise ValueError("Limit orders require a price")
 

@@ -46,8 +46,8 @@ class Simulation:
         random.shuffle(temp_requests)
         self.requests += temp_requests
 
-        return
-
+        return 
+    
     def apply_request(self):
         # might be apply just one order at a time, then the timestep increases
         # we only do one order at a time so that agents can submit or cancel orders at each time step 
@@ -69,7 +69,7 @@ class Simulation:
                     raise ValueError("Invalid order type")
 
         elif req.req_type == ReqType.PLACE:
-            result: MatchResult = self.book.match_order(req.order)
+            result: MatchResult = self.book.match_order(req.order, budget=self.agents[order.agent_id].effective_cash)
             self.apply_trades(result.trades)
             self.update_agent_open_orders(result.completed_orders, req.order)
             
@@ -78,7 +78,7 @@ class Simulation:
             raise ValueError("Request of invalid type")
 
     def update_agent_open_orders(self, completed: list[Order], new: Order):
-        while completed: # pop off end to get current order, then remove from agent.
+        while completed: # remove completed orders from the agent's open orders
             current: Order = completed.pop()
             if current.side == Side.BID:
                 if current in self.agents[current.agent_id].open_bids:
@@ -88,7 +88,8 @@ class Simulation:
                     self.agents[current.agent_id].open_asks.remove(current)
             else:
                 raise ValueError("Invalid order side")
-
+            
+        # add the new order to agent's open orders
         if new.remaining_qty > 0 and new.ord_type == OrdType.LIMIT:
             if new.side == Side.BID:
                 self.agents[new.agent_id].open_bids.append(new)
@@ -121,9 +122,9 @@ class Simulation:
             self.agents[trade.sell_agent_id].effective_cash += price
 
 
-    def run_sim(self, steps: int, vb: bool = True):
-        
+    def run_sim(self, steps: int, vb: bool = True) -> None:
         current_trades = 0
+
         # at each step we call get_requests and apply_request
         for i in range(steps):
             # at each step we get requests, then apply a request

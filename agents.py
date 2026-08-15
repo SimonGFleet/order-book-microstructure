@@ -46,28 +46,15 @@ class Agent:
         # options: cancel / place
         if request.req_type == ReqType.PLACE:
             if request.order.ord_type == OrdType.MARKET:
-                if request.order.side == Side.BID:
-                    self.effective_cash = 0
-                else:
-                    self.effective_position -= request.order.quantity
+                # if its a bid we need a maximum cash we can buy. 
+                # if its an ask we need to adjust the effective cash when it runs out - if the trade doesnt go fully through
+                pass
             else:   #limit
                 if request.order.side == Side.BID:
                     self.effective_cash -= request.order.price * request.order.quantity
                 else:
                     self.effective_position -= request.order.quantity
-        
-        else:
-            pass    # we cannot cancel market orders, they should be processed immediately and do not sit in the order book
 
-
-        # Add the order appropriately to the agents open orders - this gets removed elsewhere.
-        if request.req_type == ReqType.PLACE:
-            if request.order.side == Side.BID:
-                self.open_bids.append(request.order)
-            elif request.order.side == Side.ASK:
-                self.open_asks.append(request.order)
-            else:
-                raise ValueError("Invalid order side")
-
+                    
 
         return request
