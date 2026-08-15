@@ -69,11 +69,24 @@ class Simulation:
                     raise ValueError("Invalid order type")
 
         elif req.req_type == ReqType.PLACE:
-            result: MatchResult = self.book.match_order(req.order, budget=self.agents[order.agent_id].effective_cash)
+            result: MatchResult = self.book.match_order(req.order, budget=self.agents[req.order.agent_id].effective_cash)
             self.apply_trades(result.trades)
             self.update_agent_open_orders(result.completed_orders, req.order)
-            
-            
+            if req.order.ord_type == OrdType.MARKET:
+                agent = self.agents[req.order.agent_id]
+
+                if req.order.side == Side.BID:
+                    agent.effective_cash -= sum(
+                        trade.price * trade.quantity for trade in result.trades
+                        )
+                    
+                elif req.order.side == Side.ASK:
+                    agent.effective_position -= sum(
+                        trade.quantity for trade in result.trades
+                        )
+                else:
+                    raise ValueError("Invalid order side")
+                    
         else:
             raise ValueError("Request of invalid type")
 

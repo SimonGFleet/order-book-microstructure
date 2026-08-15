@@ -30,3 +30,8 @@ def def_agent(agent_id, strategy=None, initial_cash=1000, initial_position=10,) 
         strategy=strategy,
     )
 
+def place(ord: Order) -> Request:
+    return Request(
+        req_type=ReqType.PLACE,
+        order=ord,
+    )

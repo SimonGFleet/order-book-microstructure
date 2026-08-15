@@ -102,6 +102,7 @@ class OrderBook:
     def match_order(self, order: Order, *, budget: int | None = None) -> MatchResult:
         if order.ord_type == OrdType.LIMIT and order.price is None:
             raise ValueError("Limit orders require a price")
+        spent = 0
 
         result = MatchResult()
         # should take in an order, if it is market then it should be processed immediately - granted the book remains non empty
@@ -138,7 +139,23 @@ class OrderBook:
                 buyer_agent_id = resting.agent_id
                 seller_agent_id = order.agent_id
 
+
             traded_quantity = min(resting.remaining_qty, order.remaining_qty)
+
+            # if its a market bid then we need to make a max quantity
+            if order.ord_type == OrdType.MARKET and order.side == Side.BID:
+                # remaining allowed spendage is budget - spent
+                if budget is not None:
+                    max_quantity = (budget - spent) // best_price
+                    if max_quantity == 0:
+                        if result.trades:
+                            self.event_number += 1
+                        return result
+                    else:
+                        traded_quantity = min(traded_quantity, max_quantity)
+                    
+
+
             trade = Trade(                                
                         price=best_price,
                         quantity=traded_quantity,
@@ -148,6 +165,9 @@ class OrderBook:
                         buy_agent_id=buyer_agent_id,
                         sell_agent_id=seller_agent_id,
                     )
+
+            if order.ord_type == OrdType.MARKET and order.side == Side.BID:
+                spent += traded_quantity * best_price
             
             self.trades.append(trade)
             result.trades.append(trade)
