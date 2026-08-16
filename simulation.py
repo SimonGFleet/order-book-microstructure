@@ -72,9 +72,8 @@ class Simulation:
             result: MatchResult = self.book.match_order(req.order, budget=self.agents[req.order.agent_id].effective_cash)
             self.apply_trades(result.trades)
             self.update_agent_open_orders(result.completed_orders, req.order)
+            agent = self.agents[req.order.agent_id]
             if req.order.ord_type == OrdType.MARKET:
-                agent = self.agents[req.order.agent_id]
-
                 if req.order.side == Side.BID:
                     agent.effective_cash -= sum(
                         trade.price * trade.quantity for trade in result.trades
@@ -86,7 +85,13 @@ class Simulation:
                         )
                 else:
                     raise ValueError("Invalid order side")
-                    
+
+            elif req.order.ord_type == OrdType.LIMIT:
+                if req.order.side == Side.BID:
+                    agent.effective_cash -= req.order.price * req.order.quantity
+                else:
+                    agent.effective_position -= req.order.quantity
+            
         else:
             raise ValueError("Request of invalid type")
 

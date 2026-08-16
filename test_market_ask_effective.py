@@ -1,6 +1,5 @@
 # when we do a market ask, it should add the correct positioning
 from simulation import Simulation
-from agents import Agent
 from testing_starters import def_agent, def_bid, place
 from order_book import Order, Side, OrdType
 

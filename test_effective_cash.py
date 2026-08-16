@@ -3,6 +3,7 @@ from agents import Agent
 from strategies import Random
 from requestsobj import Request, ReqType
 from order_book import Order, Side, OrdType
+from testing_starters import def_bid, def_agent, def_ask, place
 
 
 def test_limit_order_affects_effective_cash():
@@ -44,16 +45,6 @@ def test_limit_order_affects_effective_cash():
     # Make their choice
     sim.get_requests()
     assert len(sim.requests) == 2
-
-    assert sim.agents[1].effective_cash == 900
-    assert sim.agents[2].effective_cash == 1000
-    assert sim.agents[1].effective_position == 10
-    assert sim.agents[2].effective_position == 9
-
-    assert sim.agents[1].current_cash == 1000
-    assert sim.agents[2].current_cash == 1000
-    assert sim.agents[1].current_position == 10
-    assert sim.agents[2].current_position == 10
 
     sim.apply_request()
     assert len(sim.requests) == 1
@@ -126,3 +117,25 @@ def test_cancelling_request_returns_effective_cash():
 
 # effective cash works for limit orders, not for bids in market orders. 
 
+
+
+def test_limit_bid_executing_for_less_than_price():
+    sim = Simulation()
+    sim.agents[1] = def_agent(1)
+    sim.agents[2] = def_agent(2)
+
+    ord1 = def_ask(agent_id=1, price=90)
+    ord2 = def_bid(agent_id=2)
+
+    req1 = place(ord1)
+    req2 = place(ord2)
+
+    sim.requests.append(req1)
+    sim.requests.append(req2)
+
+
+    sim.apply_request()
+    sim.apply_request()
+
+    assert sim.agents[1].current_position == 0
+    assert sim.agents[1].effective_position == 0

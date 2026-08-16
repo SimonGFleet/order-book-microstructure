@@ -26,6 +26,7 @@ class Random(Strategy):
             self,
             buy_probability: float,
             sell_probability: float,
+            cancel_probability: float,
             limit_probability: float,
             max_quantity: int,
             max_price_offset: int,

@@ -45,7 +45,7 @@ class Agent:
             request: Request
         # options: cancel / place
         if request.req_type == ReqType.PLACE:
-            if request.order.ord_type == OrdType.MARKET:
+            '''if request.order.ord_type == OrdType.MARKET:
                 # if its a bid we need a maximum cash we can buy. 
                 # if its an ask we need to adjust the effective cash when it runs out - if the trade doesnt go fully through
                 pass
@@ -53,7 +53,7 @@ class Agent:
                 if request.order.side == Side.BID:
                     self.effective_cash -= request.order.price * request.order.quantity
                 else:
-                    self.effective_position -= request.order.quantity
+                    self.effective_position -= request.order.quantity'''
 
                     
 

@@ -37,7 +37,7 @@ def test_doesnt_over_spend():
     assert sim.agents[2].current_position == 15
     assert sim.agents[1].current_cash == 1500
     assert sim.agents[1].current_position == 5
-    assert sim.agents[1].effective_position == 10
+    assert sim.agents[1].effective_position == 0
 
 
 
