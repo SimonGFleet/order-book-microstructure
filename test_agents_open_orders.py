@@ -1,8 +1,7 @@
 from simulation import Simulation
 from strategies import Random
 from agents import Agent
-from requestsobj import ReqType, Request
-from order_book import Order, Side, OrdType
+from models import Order, OrdType, ReqType, Request, Side
 
 
 def test_agent_starts_with_no_open_orders():

@@ -1,52 +1,6 @@
 from collections import deque
 from operator import ge, le
-from dataclasses import dataclass, field
-from enum import Enum
-
-class Side(Enum):
-    BID = 'bid'
-    ASK = 'ask'
-
-class OrdType(Enum):
-    MARKET = 'market'
-    LIMIT = 'limit'
-
-@dataclass
-class Order:
-    quantity: int
-    side: Side
-    ord_type: OrdType
-    order_id: int | None = None
-    cancelled: bool = False
-
-    creation_time: int = None
-    price: int | None = None
-    agent_id: int | None = None
-    stock_id: int | None = None
-
-    remaining_qty: int = field(init=False)
-
-    def __post_init__(self) -> None:
-        self.remaining_qty = self.quantity
-
-@dataclass
-class Trade:
-    price: int
-    quantity: int
-    buy_order_id: int
-    sell_order_id: int
-    event_number: int
-    timestamp: int | None = None
-    buy_agent_id: int | None = None
-    sell_agent_id: int | None = None
-
-
-
-
-class MatchResult:
-    def __init__(self):
-        self.trades: list[Trade] = []
-        self.completed_orders: list[Order] = []
+from models import MatchResult, Order, OrdType, Side, Trade
 
     
 
@@ -214,6 +168,5 @@ class OrderBook:
         if order.cancelled:
             self.event_number += 1         #timestamp only increases when we actually cancel the order
         return order
-
 
 

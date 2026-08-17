@@ -1,6 +1,6 @@
-from order_book import Order, Trade, OrderBook, Side, MatchResult, OrdType
+from order_book import OrderBook
 from agents import Agent
-from requestsobj import ReqType, Request
+from models import MatchResult, Order, OrdType, Request, ReqType, Side, Trade
 
 
 from collections import deque
@@ -176,7 +176,19 @@ class Simulation:
             self.timestamp += 1
 
 
-            
+    def get_sim_snapshot(self):
+        pass
+
+    def get_agent_snapshot(self):
+        pass
+
+    def get_agents_snapshot(self):
+        for agent in self.agents:
+            self.get_agent_snapshot(agent)
+
+
+
+
             
     def plot(self, var):
         conv = {"trade counts": self.trade_counts, 
@@ -191,4 +203,3 @@ class Simulation:
         plt.xlabel("Time Steps")
         plt.ylabel(var)
         plt.title(var + "over time")
-

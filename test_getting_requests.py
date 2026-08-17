@@ -1,7 +1,7 @@
-from order_book import OrderBook, Order, Side, OrdType, Trade
+from order_book import OrderBook
+from models import Order, OrdType, Request, ReqType, Side, Trade
 from agents import Agent
 from simulation import Simulation
-from requestsobj import Request, ReqType
 from strategies import Random
 
 

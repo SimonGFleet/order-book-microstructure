@@ -1,5 +1,6 @@
 #price priority, FIFO, quantities, and resting behaviour absolutely qualify.
-from order_book import OrderBook, Order, Side, OrdType, Trade, MatchResult
+from order_book import OrderBook
+from models import MatchResult, Order, OrdType, Side, Trade
 
 def test_bid_partially_fills_resting_ask():
     # Arrange

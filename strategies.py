@@ -1,6 +1,6 @@
-from order_book import OrderBook, Side, Order, OrdType
+from order_book import OrderBook
 from agents import Agent
-from requestsobj import Request, ReqType
+from models import Order, OrdType, Request, ReqType, Side
 
 
 import random
@@ -13,10 +13,6 @@ class Strategy:
 
     def decide(self, agent: Agent, book: OrderBook):
         pass
-
-
-
-# maybe at each timestep we are deciding what to do so we should then 
 
 
 class Random(Strategy):
@@ -130,4 +126,3 @@ class Random(Strategy):
             ReqType.PLACE,
             order=order,
         )
-        

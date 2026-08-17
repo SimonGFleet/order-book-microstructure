@@ -1,5 +1,4 @@
-from order_book import Order, OrdType, Side
-from requestsobj import ReqType, Request
+from models import Order, OrdType, ReqType, Request, Side
 from agents import Agent
 
 

@@ -7,8 +7,8 @@ if TYPE_CHECKING:
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from order_book import OrderBook, OrdType, Order, Side
-from requestsobj import Request, ReqType
+from order_book import OrderBook
+from models import Order, Request
 
 
 

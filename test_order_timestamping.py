@@ -2,7 +2,7 @@
 # when we call the function run sim - it gets requests, applies them, then increases the timestamp
 from testing_starters import def_agent, def_ask, def_bid
 from simulation import Simulation
-from requestsobj import Request, ReqType
+from models import Request, ReqType
 from strategies import Random
 
 def test_timestamps_increase_on_each_step():

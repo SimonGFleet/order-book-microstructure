@@ -1,7 +1,7 @@
 # when we do a market ask, it should add the correct positioning
 from simulation import Simulation
 from testing_starters import def_agent, def_bid, place
-from order_book import Order, Side, OrdType
+from models import Order, OrdType, Side
 
 def test_market_ask_updates_effective_position():
     sim = Simulation()

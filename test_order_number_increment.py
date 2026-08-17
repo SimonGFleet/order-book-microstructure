@@ -1,8 +1,7 @@
 from simulation import Simulation
 from agents import Agent
 from strategies import Random
-from order_book import Order
-from requestsobj import Request
+from models import Order, Request
 
 def test_order_ids_are_generated():
     sim = Simulation()

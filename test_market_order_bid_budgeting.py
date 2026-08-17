@@ -1,9 +1,8 @@
 # when we already have asks resting in the book, we should not be able to spend more than the budget we are passing in
 from simulation import Simulation
-from order_book import Order, OrdType, Side
+from models import Order, OrdType, ReqType, Request, Side
 from agents import Agent
 from testing_starters import def_agent, def_ask, place
-from requestsobj import ReqType, Request
 
 
 def test_doesnt_over_spend():

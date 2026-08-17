@@ -1,8 +1,7 @@
 from simulation import Simulation
 from agents import Agent
 from strategies import Random
-from requestsobj import Request, ReqType
-from order_book import Order, Side, OrdType
+from models import Order, OrdType, Request, ReqType, Side
 from testing_starters import def_bid, def_agent, def_ask, place
 
 
