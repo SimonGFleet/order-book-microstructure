@@ -45,7 +45,7 @@ Strategies base decisions on effective cash and effective position, such that th
 | `agents.py` | Agent state and strategy integration |
 | `strategies.py` | Trading-strategy implementations |
 | `models.py` | Stores common objects for other files to import |
-| `tester.ipynb` | Interactive experimentation |
+| `example.ipynb` | Interactive experimentation |
 | `test_*.py` | Automated tests |
 
 ## Running the tests
@@ -57,5 +57,5 @@ python -m pytest -v
 To experiment with the included notebook, run:
 
 ```bash
-jupyter lab tester.ipynb
+jupyter lab example.ipynb
 ```
