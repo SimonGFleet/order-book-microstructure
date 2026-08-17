@@ -11,6 +11,7 @@ def test_timestamps_increase_on_each_step():
     strat1 = Random(
         buy_probability=0.5,
         sell_probability=0.5,
+        cancel_probability=0,
         limit_probability=1,
         max_quantity=1,
         max_price_offset=1,

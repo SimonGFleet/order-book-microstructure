@@ -36,25 +36,6 @@ class Agent:
     def decide_action(self, book: OrderBook) -> Request | None:
         # want this to call the strategy and get the result,
         # then the simulation will call this agent.decide_action and get the request / None that is made.    
-
         request: Request | None = self.strategy.decide(self, book) # this should call the strategy
-
-        if request is None:
-            return None
-        else:
-            request: Request
-        # options: cancel / place
-        if request.req_type == ReqType.PLACE:
-            '''if request.order.ord_type == OrdType.MARKET:
-                # if its a bid we need a maximum cash we can buy. 
-                # if its an ask we need to adjust the effective cash when it runs out - if the trade doesnt go fully through
-                pass
-            else:   #limit
-                if request.order.side == Side.BID:
-                    self.effective_cash -= request.order.price * request.order.quantity
-                else:
-                    self.effective_position -= request.order.quantity'''
-
-                    
 
         return request

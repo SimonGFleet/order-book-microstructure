@@ -33,6 +33,9 @@ class Random(Strategy):
             reference_price: int = 100,
             seed: int | None = None,
     ):
+        if not 0 <= cancel_probability <= 1:
+            raise ValueError("Invalid cancel probability")
+        
         if buy_probability + sell_probability > 1:
             raise ValueError("Buy probability + Sell probability must be less than one.")
 
@@ -51,6 +54,7 @@ class Random(Strategy):
         
         self.buy_prob = buy_probability
         self.sell_prob = sell_probability
+        self.cancel_prob = cancel_probability
         self.limit_prob = limit_probability
         self.max_quantity = max_quantity            # in current setting, expectation is n / 2
         self.max_price_offset = max_price_offset    # expectation is best_price
@@ -63,6 +67,23 @@ class Random(Strategy):
         '''
         Chooses a float in [0, 1], then based on the assigned probabilities we either attempt to buy or sell
         Same for market order'''
+        cancel = self.rng.random() # cancel checker.
+        if cancel < self.cancel_prob:
+            # choose a random order to cancel out of the open orders?
+            a = len(agent.open_asks)
+            b = len(agent.open_bids)
+            if a + b == 0:
+                return None
+            
+            n = self.rng.randint(0, a+b-1)
+            if n >= a:
+                n -= a
+                return Request(req_type=ReqType.CANCEL, order=agent.open_bids[n])
+            else:
+                return Request(req_type=ReqType.CANCEL, order=agent.open_asks[n])
+
+
+
         action = self.rng.random() # buy/sell/wait
         type_prob = self.rng.random() # market/limit
 

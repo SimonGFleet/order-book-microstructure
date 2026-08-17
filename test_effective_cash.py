@@ -12,6 +12,7 @@ def test_limit_order_affects_effective_cash():
     strat1 = Random(
         buy_probability=1,
         sell_probability=0,
+        cancel_probability=0,
         limit_probability=1,
         max_quantity=1,
         max_price_offset=0,
@@ -20,6 +21,7 @@ def test_limit_order_affects_effective_cash():
     strat2 = Random(
         buy_probability=0,
         sell_probability=1,
+        cancel_probability=0,
         limit_probability=1,
         max_quantity=1,
         max_price_offset=0,
@@ -74,6 +76,7 @@ def test_cancelling_request_returns_effective_cash():
     strat1 = Random(
             buy_probability=1,
             sell_probability=0,
+            cancel_probability=0,
             limit_probability=1,
             max_quantity=1,
             max_price_offset=0,
@@ -139,3 +142,33 @@ def test_limit_bid_executing_for_less_than_price():
 
     assert sim.agents[1].current_position == 0
     assert sim.agents[1].effective_position == 0
+
+
+
+def test_crossing_limit_orders():
+    # agent1 submits an ask for 90, then agent2 submits a bid for 100, both start at 1000,
+    # finals: agent1: 1900 cash, position == 0. Agent 2: should be: 100 cash, 20 postion.
+    sim = Simulation()
+    ag1 = def_agent(1)
+    ag2 = def_agent(2)
+    sim.agents[1] = ag1
+    sim.agents[2] = ag2
+
+    ord1 = def_ask(agent_id=1, price=90)
+    ord2 = def_bid(agent_id=2)
+    req1 = place(ord1)
+    req2 = place(ord2)
+    sim.requests.append(req1)
+    sim.requests.append(req2)
+    sim.apply_request()
+    sim.apply_request()
+
+    assert ag1.current_position == 0
+    assert ag1.effective_position == 0
+    assert ag2.current_position == 20
+    assert ag2.effective_position == 20
+
+    assert ag1.current_cash == 1900
+    assert ag1.effective_cash == 1900
+    assert ag2.current_cash == 100
+    assert ag2.effective_cash == 100

@@ -11,6 +11,7 @@ def test_agent_starts_with_no_open_orders():
     strat1 = Random(            # does nothing every time.
         buy_probability=0,
         sell_probability=0,
+        cancel_probability=0,
         limit_probability=0.5,
         max_quantity=1,
         max_price_offset=0,

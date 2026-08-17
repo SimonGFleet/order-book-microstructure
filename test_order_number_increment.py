@@ -10,6 +10,7 @@ def test_order_ids_are_generated():
     strat1 = Random(
         buy_probability=1,
         sell_probability=0,
+        cancel_probability=0,
         limit_probability=1,
         max_quantity=1,
         max_price_offset=0,
@@ -35,4 +36,3 @@ def test_order_ids_are_generated():
 
     assert ord1.order.order_id == 0
     assert ord2.order.order_id == 1
-

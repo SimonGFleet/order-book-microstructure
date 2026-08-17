@@ -46,7 +46,9 @@ class Simulation:
         random.shuffle(temp_requests)
         self.requests += temp_requests
 
-        return 
+        return
+
+    
     
     def apply_request(self):
         # might be apply just one order at a time, then the timestep increases
@@ -88,12 +90,16 @@ class Simulation:
 
             elif req.order.ord_type == OrdType.LIMIT:
                 if req.order.side == Side.BID:
-                    agent.effective_cash -= req.order.price * req.order.quantity
+                    trade_cost = sum(trade.price * trade.quantity for trade in result.trades)
+                    remaining_price = req.order.price * req.order.remaining_qty
+                    agent.effective_cash -= trade_cost + remaining_price
                 else:
                     agent.effective_position -= req.order.quantity
             
         else:
             raise ValueError("Request of invalid type")
+
+        
 
     def update_agent_open_orders(self, completed: list[Order], new: Order):
         while completed: # remove completed orders from the agent's open orders

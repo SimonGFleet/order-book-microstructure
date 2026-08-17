@@ -14,6 +14,7 @@ def test_cash_position_totals_preserved():
         strat = Random(
             buy_probability=0.33,
             sell_probability=0.33,
+            cancel_probability=0,
             limit_probability=1,
             max_quantity=10,
             max_price_offset=10,
