@@ -16,8 +16,8 @@ A Python agent based order book market microstructure simulator. Experiment crea
 Requires Python 3.10 or newer.
 
 ```bash
-git clone https://github.com/SimonGFleet/order-book.git
-cd order-book
+git clone https://github.com/SimonGFleet/order-book-microstructure.git
+cd order-book-microstructure
 
 python3 -m venv .venv
 source .venv/bin/activate
