@@ -58,3 +58,14 @@ class ReqType(Enum):
 class Request:
     req_type: ReqType
     order: Order
+
+
+@dataclass
+class SimulationSnapshot:
+    timestamp: int
+    best_bid: int | None
+    best_ask: int | None
+    mid_price: float | None = None
+    spread: int | None = None
+    trade_count: int = 0
+    traded_volume: int = 0

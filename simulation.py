@@ -1,6 +1,6 @@
 from order_book import OrderBook
 from agents import Agent
-from models import MatchResult, Order, OrdType, Request, ReqType, Side, Trade
+from models import MatchResult, Order, OrdType, Request, ReqType, Side, Trade, SimulationSnapshot
 
 
 from collections import deque
@@ -14,16 +14,10 @@ class Simulation:
         self.book: OrderBook = OrderBook()
         self.agents: dict[int, Agent] = {} # key = agent_id 
         self.requests: deque[Request] = deque() # queue of orders waiting to be applied
+        self.sim_history: list[SimulationSnapshot] = []
 
         self.order_count = 0
         self.timestamp = 0
-
-        # Stats for viewing
-        self.best_bids = []
-        self.best_asks = []
-        self.spreads = []
-        self.mid_prices = []
-        self.trade_counts = []
 
 
 
@@ -146,38 +140,39 @@ class Simulation:
             self.agents[trade.sell_agent_id].effective_cash += price
 
 
-    def run_sim(self, steps: int, vb: bool = True) -> None:
-        current_trades = 0
-
+    def run_sim(self, steps: int) -> None:
         # at each step we call get_requests and apply_request
         for i in range(steps):
+            trades_before = len(self.book.trades)
+
             # at each step we get requests, then apply a request
             self.get_requests()
-
             while self.requests:
                 self.apply_request()
 
-            best_bid = self.book.biggest_bid()
-            best_ask = self.book.smallest_ask()
-
-            self.best_bids.append(best_bid)
-            self.best_asks.append(best_ask)
-            if best_bid and best_ask:                       # if we can: fetch mid price and spread.
-                self.spreads.append(best_ask - best_bid)
-                self.mid_prices.append((best_ask + best_bid) / 2)
-            else:
-                self.spreads.append(None)
-                self.mid_prices.append(None) # still need to append something to correctly view the time series
-
-            trades_this_step = len(self.book.trades) - current_trades # feels like a long way of doing this
-            current_trades += trades_this_step
-            self.trade_counts.append(trades_this_step)
-
+            # Create snapshots
+            self.sim_history.append(self.get_sim_snapshot(trades_before=trades_before))
+            
+        
             self.timestamp += 1
 
 
-    def get_sim_snapshot(self):
-        pass
+    def get_sim_snapshot(self, trades_before: int) -> SimulationSnapshot:
+        sim_snap = SimulationSnapshot(
+            timestamp=self.timestamp,
+            best_bid=self.book.biggest_bid(),
+            best_ask=self.book.smallest_ask(),
+            )
+        if sim_snap.best_bid is not None and sim_snap.best_ask is not None:                       # if we can: fetch mid price and spread.
+            sim_snap.spread = sim_snap.best_ask - sim_snap.best_bid
+            sim_snap.mid_price = (sim_snap.best_ask + sim_snap.best_bid) / 2
+
+        sim_snap.trade_count = len(self.book.trades) - trades_before
+
+        return sim_snap
+        
+
+        
 
     def get_agent_snapshot(self):
         pass
@@ -187,19 +182,50 @@ class Simulation:
             self.get_agent_snapshot(agent)
 
 
+    def plot_midprice(self):
+        timestamps = [snap.timestamp for snap in self.sim_history]
+        mid_prices = [snap.mid_price for snap in self.sim_history]
+
+        plt.plot(timestamps, mid_prices)
+        plt.xlabel("Time Steps")
+        plt.ylabel("Price")
+        plt.title("Mid Price over Time")
+
+    def plot_best_bids(self):
+        timestamps = [snap.timestamp for snap in self.sim_history]
+        best_bids = [snap.best_bid for snap in self.sim_history]
+
+        plt.plot(timestamps, best_bids)
+        plt.xlabel("Time Steps")
+        plt.ylabel("Price")
+        plt.title("Best Bids over Time")
+
+    def plot_best_asks(self):
+        timestamps = [snap.timestamp for snap in self.sim_history]
+        best_asks = [snap.best_ask for snap in self.sim_history]
+
+        plt.plot(timestamps, best_asks)
+        plt.xlabel("Time Steps")
+        plt.ylabel("Price")
+        plt.title("Best Asks over Time")
+
+    def plot_spread(self):
+        timestamps = [snap.timestamp for snap in self.sim_history]
+        spreads = [snap.spread for snap in self.sim_history]
+
+        plt.plot(timestamps, spreads)
+        plt.xlabel("Time Steps")
+        plt.ylabel("Spread")
+        plt.title("Spread over Time")
+
+    def plot_trade_count(self):
+        timestamps = [snap.timestamp for snap in self.sim_history]
+        trade_counts = [snap.trade_count for snap in self.sim_history]
+
+        plt.plot(timestamps, trade_counts)
+        plt.xlabel("Time Steps")
+        plt.ylabel("Number")
+        plt.title("Trade counts over Time")
 
 
             
-    def plot(self, var):
-        conv = {"trade counts": self.trade_counts, 
-                "best bids": self.best_bids, 
-                "best asks" : self.best_asks, 
-                "price": self.mid_prices, 
-                "spread" : self.spreads}
-        if var not in conv:
-            raise ValueError("Invalid statistic to plot")
-
-        plt.plot(conv[var])
-        plt.xlabel("Time Steps")
-        plt.ylabel(var)
-        plt.title(var + "over time")
