@@ -141,7 +141,7 @@ class OrderBook:
     
     def cancel_order(self, order: Order) -> Order:
         if order.remaining_qty == 0:
-            return Order
+            return order
 
         # idea is to repeatedly remove from start and add to end to end until order is removed
         # fetch correct book

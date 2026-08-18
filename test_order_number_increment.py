@@ -13,6 +13,7 @@ def test_order_ids_are_generated():
         limit_probability=1,
         max_quantity=1,
         max_price_offset=0,
+        reference_price=sim.initial_price,
     )
 
     sim.agents[1] = Agent(

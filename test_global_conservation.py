@@ -18,6 +18,7 @@ def test_cash_position_totals_preserved():
             limit_probability=0.7,
             max_quantity=10,
             max_price_offset=10,
+            reference_price=sim.initial_price,
         )
         agent = Agent(
             agent_id=i,

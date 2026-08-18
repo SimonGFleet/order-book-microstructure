@@ -26,7 +26,7 @@ class Random(Strategy):
             limit_probability: float,
             max_quantity: int,
             max_price_offset: int,
-            reference_price: int = 100,
+            reference_price: int,
             seed: int | None = None,
     ):
         if not 0 <= cancel_probability <= 1:
@@ -107,7 +107,6 @@ class Random(Strategy):
             return None
 
 
-
         # if we cant afford the order or dont want one then we dont make one
         if quantity == 0:
             return None
@@ -121,8 +120,18 @@ class Random(Strategy):
                     price=price,
                 )
 
-        # package it appropriately.
+        # Package it appropriately.
         return Request(
             ReqType.PLACE,
             order=order,
         )
+
+
+
+
+class NaiveMM:
+    '''This strategy does not care what its inventory looks like,
+    it will submit around the midprice
+    it will cancel orders that are not appropriately situated around the midprice'''
+    def __init__(self):
+        pass

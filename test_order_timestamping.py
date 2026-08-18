@@ -15,6 +15,7 @@ def test_timestamps_increase_on_each_step():
         limit_probability=1,
         max_quantity=1,
         max_price_offset=1,
+        reference_price=sim.initial_price,
     )
 
     sim.agents[1] = def_agent(1, strat1, initial_cash=100000, initial_position=1000)

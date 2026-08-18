@@ -1,16 +1,14 @@
 from order_book import OrderBook
 from agents import Agent
-from models import MatchResult, Order, OrdType, Request, ReqType, Side, Trade, SimulationSnapshot
-
+from models import MatchResult, Order, OrdType, Request, ReqType, Side, Trade, SimulationSnapshot, AgentSnapshot
 
 from collections import deque
-from dataclasses import dataclass
-from enum import Enum
 import random
 from matplotlib import pyplot as plt
 
+
 class Simulation:
-    def __init__(self):
+    def __init__(self, initial_price: int = 100):
         self.book: OrderBook = OrderBook()
         self.agents: dict[int, Agent] = {} # key = agent_id 
         self.requests: deque[Request] = deque() # queue of orders waiting to be applied
@@ -18,6 +16,7 @@ class Simulation:
 
         self.order_count = 0
         self.timestamp = 0
+        self.initial_price = initial_price
 
 
 
@@ -40,11 +39,9 @@ class Simulation:
         random.shuffle(temp_requests)
         self.requests += temp_requests
 
-        return
-
     
     
-    def apply_request(self):
+    def apply_request(self) -> None:
         # might be apply just one order at a time, then the timestep increases
         # we only do one order at a time so that agents can submit or cancel orders at each time step 
         # they can see what the market looks like
@@ -95,7 +92,7 @@ class Simulation:
 
         
 
-    def update_agent_open_orders(self, completed: list[Order], new: Order):
+    def update_agent_open_orders(self, completed: list[Order], new: Order) -> None:
         while completed: # remove completed orders from the agent's open orders
             current: Order = completed.pop()
             if current.side == Side.BID:
@@ -116,7 +113,7 @@ class Simulation:
             else:
                 raise ValueError("Invalid order side")
         
-    def apply_trades(self, trades: list[Trade]):
+    def apply_trades(self, trades: list[Trade]) -> None:
         # goes through the list of trades, possibly empty
         # can just go until empty applying in any order since its just record keeping.
         for trade in trades:
@@ -152,9 +149,12 @@ class Simulation:
 
             # Create snapshots
             self.sim_history.append(self.get_sim_snapshot(trades_before=trades_before))
-            
+            self.get_agents_snapshot()  # appends individual snapshots to each agent
         
             self.timestamp += 1
+
+
+
 
 
     def get_sim_snapshot(self, trades_before: int) -> SimulationSnapshot:
@@ -163,69 +163,46 @@ class Simulation:
             best_bid=self.book.biggest_bid(),
             best_ask=self.book.smallest_ask(),
             )
-        if sim_snap.best_bid is not None and sim_snap.best_ask is not None:                       # if we can: fetch mid price and spread.
+        if sim_snap.best_bid is not None and sim_snap.best_ask is not None:     # if we can: fetch mid price and spread.
             sim_snap.spread = sim_snap.best_ask - sim_snap.best_bid
             sim_snap.mid_price = (sim_snap.best_ask + sim_snap.best_bid) / 2
 
         sim_snap.trade_count = len(self.book.trades) - trades_before
 
         return sim_snap
-        
 
         
+    def get_agent_snapshot(self, agent: Agent) -> AgentSnapshot:
+        
+        # Get appropriate price
+        best_bid = self.book.biggest_bid()
+        best_ask = self.book.smallest_ask()
+        if best_bid is not None and best_ask is not None:
+            price = (best_ask + best_bid) / 2
 
-    def get_agent_snapshot(self):
-        pass
+        elif best_bid is not None:
+            price = best_bid
 
-    def get_agents_snapshot(self):
-        for agent in self.agents:
-            self.get_agent_snapshot(agent)
+        elif best_ask is not None:
+            price = best_ask
 
+        else:
+            price = self.initial_price
 
-    def plot_midprice(self):
-        timestamps = [snap.timestamp for snap in self.sim_history]
-        mid_prices = [snap.mid_price for snap in self.sim_history]
+        wealth = agent.current_cash + agent.current_position * price
+        pnl = wealth - (agent.initial_cash + agent.initial_position * self.initial_price)
 
-        plt.plot(timestamps, mid_prices)
-        plt.xlabel("Time Steps")
-        plt.ylabel("Price")
-        plt.title("Mid Price over Time")
+        return AgentSnapshot(
+                    timestamp=self.timestamp,
+                    current_cash=agent.current_cash,
+                    current_position=agent.current_position,
+                    effective_cash=agent.effective_cash,
+                    effective_position=agent.effective_position,
+                    wealth=wealth,
+                    pnl=pnl,
+                )
 
-    def plot_best_bids(self):
-        timestamps = [snap.timestamp for snap in self.sim_history]
-        best_bids = [snap.best_bid for snap in self.sim_history]
-
-        plt.plot(timestamps, best_bids)
-        plt.xlabel("Time Steps")
-        plt.ylabel("Price")
-        plt.title("Best Bids over Time")
-
-    def plot_best_asks(self):
-        timestamps = [snap.timestamp for snap in self.sim_history]
-        best_asks = [snap.best_ask for snap in self.sim_history]
-
-        plt.plot(timestamps, best_asks)
-        plt.xlabel("Time Steps")
-        plt.ylabel("Price")
-        plt.title("Best Asks over Time")
-
-    def plot_spread(self):
-        timestamps = [snap.timestamp for snap in self.sim_history]
-        spreads = [snap.spread for snap in self.sim_history]
-
-        plt.plot(timestamps, spreads)
-        plt.xlabel("Time Steps")
-        plt.ylabel("Spread")
-        plt.title("Spread over Time")
-
-    def plot_trade_count(self):
-        timestamps = [snap.timestamp for snap in self.sim_history]
-        trade_counts = [snap.trade_count for snap in self.sim_history]
-
-        plt.plot(timestamps, trade_counts)
-        plt.xlabel("Time Steps")
-        plt.ylabel("Number")
-        plt.title("Trade counts over Time")
-
-
-            
+    def get_agents_snapshot(self) -> None:
+        for id in self.agents:
+            agent = self.agents[id]
+            agent.snapshots.append(self.get_agent_snapshot(agent))

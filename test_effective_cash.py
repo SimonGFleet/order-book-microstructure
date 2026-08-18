@@ -15,6 +15,7 @@ def test_limit_order_affects_effective_cash():
         limit_probability=1,
         max_quantity=1,
         max_price_offset=0,
+        reference_price=sim.initial_price,
     )
 
     strat2 = Random(
@@ -24,6 +25,7 @@ def test_limit_order_affects_effective_cash():
         limit_probability=1,
         max_quantity=1,
         max_price_offset=0,
+        reference_price=sim.initial_price,
     )
 
     sim.agents[1] = Agent(
@@ -79,6 +81,7 @@ def test_cancelling_request_returns_effective_cash():
             limit_probability=1,
             max_quantity=1,
             max_price_offset=0,
+            reference_price=sim.initial_price,
         )
 
     sim.agents[1] = Agent(

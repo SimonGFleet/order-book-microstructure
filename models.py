@@ -69,3 +69,14 @@ class SimulationSnapshot:
     spread: int | None = None
     trade_count: int = 0
     traded_volume: int = 0
+
+
+@dataclass
+class AgentSnapshot:
+    timestamp: int
+    current_cash: int
+    current_position: int
+    effective_cash: int
+    effective_position: int
+    wealth: float                # wealth is current_cash + current_position * estimated price (mid_price or best_bid/ask if only one)
+    pnl: float                    # this is the change in wealth from the start

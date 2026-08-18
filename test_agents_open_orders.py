@@ -14,6 +14,7 @@ def test_agent_starts_with_no_open_orders():
         limit_probability=0.5,
         max_quantity=1,
         max_price_offset=0,
+        reference_price=sim.initial_price,
     )
 
     sim.agents[1] = Agent(
