@@ -17,6 +17,7 @@ class OrderBook:
         self.trades: list[Trade] = []
         # this is incremented after each trade
         self.event_number = 0
+        self.mid_price: float | None = None
 
 
 
@@ -169,4 +170,7 @@ class OrderBook:
             self.event_number += 1         #timestamp only increases when we actually cancel the order
         return order
 
-
+    def get_mid_price(self) -> None:
+        if self.biggest_bid() is not None and self.smallest_ask() is not None:
+            self.mid_price = (self.smallest_ask() + self.biggest_bid()) / 2
+        

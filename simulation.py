@@ -25,7 +25,7 @@ class Simulation:
         temp_requests: list[Request] = []
         
         for agent in self.agents.values():
-            decision = agent.decide_action(self.book)
+            decision = agent.decide_action(self.book, self.timestamp)
 
             if decision is not None:
 
@@ -142,10 +142,15 @@ class Simulation:
         for i in range(steps):
             trades_before = len(self.book.trades)
 
+            # update mid_price
+            self.book.get_mid_price()
+
             # at each step we get requests, then apply a request
             self.get_requests()
             while self.requests:
                 self.apply_request()
+
+            
 
             # Create snapshots
             self.sim_history.append(self.get_sim_snapshot(trades_before=trades_before))

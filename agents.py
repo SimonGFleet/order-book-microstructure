@@ -19,7 +19,7 @@ class Agent:
     initial_cash: int
     initial_position: int
     strategy: Strategy
-    
+
     open_bids: list[Order] = field(default_factory=list)
     open_asks: list[Order] = field(default_factory=list)
     snapshots: list[AgentSnapshot] = field(default_factory=list)
@@ -36,9 +36,9 @@ class Agent:
         self.current_position = self.initial_position
         self.effective_position = self.initial_position
 
-    def decide_action(self, book: OrderBook) -> Request | None:
+    def decide_action(self, book: OrderBook, timestep: int) -> Request | None:
         # want this to call the strategy and get the result,
         # then the simulation will call this agent.decide_action and get the request / None that is made.    
-        request: Request | None = self.strategy.decide(self, book) # this should call the strategy
+        request: Request | None = self.strategy.decide(self, book, timestep) # this should call the strategy
 
         return request
