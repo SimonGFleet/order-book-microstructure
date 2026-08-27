@@ -2,35 +2,38 @@ from .strategies import Strategy
 from .helper_functions import cancellation_request, placement_request
 from order_book import OrderBook
 from agents import Agent
-from models import Request
+from models import Order, Request, ReqType, OrdType, Side
 
 import random 
 
-class NaiveMM(Strategy):
-    '''This strategy does not care what its inventory looks like,
-    it will submit around the midprice
-    it will cancel orders that are not appropriately situated around the midprice'''
+# 1. should i cancel an order - copy in from naive strategy
+# 2. get our current ratio
+# 3. if the current ratio is off by a certain amount then we should place an order appropriately.
+# 4. if we are balanced then we should see if we have orders in the right place, else place them
+
+class InventoryMM(Strategy):
     def __init__(
             self,
             half_spread: int,
             time_req: int,
             tolerance: int,
+            target_ratio: float,
+            ratio_error: float,
             quantity: int,
             seed: int | None = None,
             ):
         self.half_spread = half_spread
         self.time_req = time_req
         self.tolerance = tolerance
+        self.target_ratio = target_ratio
+        self.ratio_error = ratio_error
         self.quantity = quantity
         self.rng = random.Random(seed)
 
-
     def decide(self, agent: Agent, book: OrderBook, timestamp: int) -> Request | None:
-        # check if the market has liquidity
         if book.mid_price is None:
             return None
 
-        # get the desired spread
         ask = book.mid_price + self.half_spread
         bid = book.mid_price - self.half_spread
 
@@ -46,6 +49,20 @@ class NaiveMM(Strategy):
         if cancel_request is not None:
             return cancel_request
 
+        # Inventory-aware order placement will go here.
+
+        side = None
+
+        
+        stocks = agent.current_position * book.mid_price
+        wealth = stocks + agent.current_cash
+        ratio = stocks / wealth
+        if abs(ratio - self.target_ratio) > self.ratio_error:
+            if ratio - self.target_ratio > 0:   # too much in stocks
+                side = Side.ASK
+            else:
+                side = Side.BID
+
 
         return placement_request(
             ask=ask,
@@ -53,6 +70,6 @@ class NaiveMM(Strategy):
             agent=agent,
             quantity=self.quantity,
             rng=self.rng,
+            side=side
         )
-        
 
