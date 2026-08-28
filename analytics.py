@@ -64,7 +64,7 @@ class Analytics():
     # AGENT PLOTS:
 
     def plot_agent_wealth(self, agent_id: int):
-        agent = self.sim.agents[agent_id]
+        agent = self.sim.traders[agent_id]
 
         timestamps = [snap.timestamp for snap in agent.snapshots]
         wealth = [snap.wealth for snap in agent.snapshots]
@@ -76,7 +76,7 @@ class Analytics():
         plt.show()
 
     def plot_agent_pnl(self, agent_id: int):
-        agent = self.sim.agents[agent_id]
+        agent = self.sim.traders[agent_id]
 
         timestamps = [snap.timestamp for snap in agent.snapshots]
         pnl = [snap.pnl for snap in agent.snapshots]
@@ -104,7 +104,7 @@ class Analytics():
         mid_prices = [snap.mid_price for snap in sim.sim_history]
         spreads = [snap.spread for snap in sim.sim_history]
 
-        mm = sim.agents[market_maker_id]
+        mm = sim.traders[market_maker_id]
         mm_timestamps = [snap.timestamp for snap in mm.snapshots]
         mm_inventory = [snap.current_position for snap in mm.snapshots]
 

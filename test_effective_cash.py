@@ -1,5 +1,5 @@
 from simulation import Simulation
-from agents import Agent
+from agents import Trader
 from strategies import Random
 from models import Order, OrdType, Request, ReqType, Side
 from testing_starters import def_bid, def_agent, def_ask, place
@@ -28,13 +28,15 @@ def test_limit_order_affects_effective_cash():
         reference_price=sim.initial_price,
     )
 
-    sim.agents[1] = Agent(
+    sim.traders[1] = Trader(
+            model=sim,
         agent_id=1,
         initial_cash=1000,
         strategy=strat1,
         initial_position=10,
         )
-    sim.agents[2] = Agent(
+    sim.traders[2] = Trader(
+            model=sim,
             agent_id=2,
             initial_cash=1000,
             strategy=strat2,
@@ -55,15 +57,15 @@ def test_limit_order_affects_effective_cash():
     sim.apply_request()
     assert len(sim.requests) == 0
 
-    assert sim.agents[1].effective_cash == 900
-    assert sim.agents[2].effective_cash == 1100
-    assert sim.agents[1].effective_position == 11
-    assert sim.agents[2].effective_position == 9
+    assert sim.traders[1].effective_cash == 900
+    assert sim.traders[2].effective_cash == 1100
+    assert sim.traders[1].effective_position == 11
+    assert sim.traders[2].effective_position == 9
 
-    assert sim.agents[1].current_cash == 900
-    assert sim.agents[2].current_cash == 1100
-    assert sim.agents[1].current_position == 11
-    assert sim.agents[2].current_position == 9
+    assert sim.traders[1].current_cash == 900
+    assert sim.traders[2].current_cash == 1100
+    assert sim.traders[1].current_position == 11
+    assert sim.traders[2].current_position == 9
 
 
     assert len(sim.book.trades) == 1
@@ -84,7 +86,8 @@ def test_cancelling_request_returns_effective_cash():
             reference_price=sim.initial_price,
         )
 
-    sim.agents[1] = Agent(
+    sim.traders[1] = Trader(
+            model=sim,
         agent_id=1,
         initial_cash=1000,
         strategy=strat1,
@@ -107,8 +110,8 @@ def test_cancelling_request_returns_effective_cash():
     sim.apply_request()
 
     assert len(sim.requests) == 0
-    assert sim.agents[1].current_cash == 1000
-    assert sim.agents[1].effective_cash == 900  
+    assert sim.traders[1].current_cash == 1000
+    assert sim.traders[1].effective_cash == 900
     
     sim.requests.append(Request(ReqType.CANCEL, placed_order))
 
@@ -116,8 +119,8 @@ def test_cancelling_request_returns_effective_cash():
     sim.apply_request()
     assert len(sim.requests) == 0
 
-    assert sim.agents[1].current_cash == 1000
-    assert sim.agents[1].effective_cash == 1000
+    assert sim.traders[1].current_cash == 1000
+    assert sim.traders[1].effective_cash == 1000
 
 
 # effective cash works for limit orders, not for bids in market orders. 
@@ -126,8 +129,8 @@ def test_cancelling_request_returns_effective_cash():
 
 def test_limit_bid_executing_for_less_than_price():
     sim = Simulation()
-    sim.agents[1] = def_agent(1)
-    sim.agents[2] = def_agent(2)
+    sim.traders[1] = def_agent(sim, 1)
+    sim.traders[2] = def_agent(sim, 2)
 
     ord1 = def_ask(agent_id=1, price=90)
     ord2 = def_bid(agent_id=2)
@@ -142,19 +145,19 @@ def test_limit_bid_executing_for_less_than_price():
     sim.apply_request()
     sim.apply_request()
 
-    assert sim.agents[1].current_position == 0
-    assert sim.agents[1].effective_position == 0
+    assert sim.traders[1].current_position == 0
+    assert sim.traders[1].effective_position == 0
 
 
 
 def test_crossing_limit_orders():
     # agent1 submits an ask for 90, then agent2 submits a bid for 100, both start at 1000,
-    # finals: agent1: 1900 cash, position == 0. Agent 2: should be: 100 cash, 20 postion.
+    # finals: agent1: 1900 cash, position == 0. Trader 2: should be: 100 cash, 20 postion.
     sim = Simulation()
-    ag1 = def_agent(1)
-    ag2 = def_agent(2)
-    sim.agents[1] = ag1
-    sim.agents[2] = ag2
+    ag1 = def_agent(sim, 1)
+    ag2 = def_agent(sim, 2)
+    sim.traders[1] = ag1
+    sim.traders[2] = ag2
 
     ord1 = def_ask(agent_id=1, price=90)
     ord2 = def_bid(agent_id=2)

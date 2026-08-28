@@ -1,7 +1,7 @@
 from .strategies import Strategy
 from models import Request, ReqType, Order, Side, OrdType
 from order_book import OrderBook
-from agents import Agent
+from agents import Trader
 
 import random
 
@@ -49,7 +49,7 @@ class Random(Strategy):
 
 
 
-    def decide(self, agent: Agent, book: OrderBook, timestamp: int) -> Request | None:
+    def decide(self, agent: Trader, book: OrderBook, timestamp: int) -> Request | None:
         '''
         Chooses a float in [0, 1], then based on the assigned probabilities we either attempt to buy or sell
         Same for market order'''

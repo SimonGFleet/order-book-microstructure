@@ -1,5 +1,6 @@
 from models import Order, OrdType, ReqType, Request, Side
-from agents import Agent
+from agents import Trader
+import mesa
 
 
 
@@ -21,8 +22,9 @@ def def_ask(agent_id: int, quantity: int = 10, price: int = 100, side: Side = Si
         agent_id=agent_id,
     )
 
-def def_agent(agent_id, strategy=None, initial_cash=1000, initial_position=10,) -> Agent:
-    return Agent(
+def def_agent(model: mesa.Model, agent_id, strategy=None, initial_cash=1000, initial_position=10,) -> Trader:
+    return Trader(
+        model=model,
         agent_id=agent_id,
         initial_cash=initial_cash,
         initial_position=initial_position,

@@ -1,3 +1,4 @@
 matplotlib
 pytest>=8.0
 jupyterlab>=4.0
+mesa[network]==3.5.1

@@ -1,7 +1,7 @@
 from .strategies import Strategy
 from .helper_functions import cancellation_request, placement_request
 from order_book import OrderBook
-from agents import Agent
+from agents import Trader
 from models import Order, Request, ReqType, OrdType, Side
 
 import random 
@@ -30,7 +30,7 @@ class InventoryMM(Strategy):
         self.quantity = quantity
         self.rng = random.Random(seed)
 
-    def decide(self, agent: Agent, book: OrderBook, timestamp: int) -> Request | None:
+    def decide(self, agent: Trader, book: OrderBook, timestamp: int) -> Request | None:
         if book.mid_price is None:
             return None
 
@@ -72,4 +72,3 @@ class InventoryMM(Strategy):
             rng=self.rng,
             side=side
         )
-

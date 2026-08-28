@@ -1,6 +1,6 @@
 from simulation import Simulation
 from strategies import Random
-from agents import Agent
+from agents import Trader
 from models import Order, OrdType, ReqType, Request, Side
 
 
@@ -17,7 +17,8 @@ def test_agent_starts_with_no_open_orders():
         reference_price=sim.initial_price,
     )
 
-    sim.agents[1] = Agent(
+    sim.traders[1] = Trader(
+            model=sim,
         agent_id=1,
         initial_cash=1000,
         initial_position=10,
@@ -26,13 +27,13 @@ def test_agent_starts_with_no_open_orders():
 
     sim.get_requests()
 
-    assert len(sim.requests) == len(sim.agents[1].open_asks)
-    assert len(sim.requests) == len(sim.agents[1].open_bids)
+    assert len(sim.requests) == len(sim.traders[1].open_asks)
+    assert len(sim.requests) == len(sim.traders[1].open_bids)
 
     sim.apply_request()
 
-    assert len(sim.requests) == len(sim.agents[1].open_asks)
-    assert len(sim.requests) == len(sim.agents[1].open_bids)
+    assert len(sim.requests) == len(sim.traders[1].open_asks)
+    assert len(sim.requests) == len(sim.traders[1].open_bids)
 
 
 
@@ -40,14 +41,16 @@ def test_agents_gains_open_orders():
     # two agents should make orders, they should both gain the order. no matching occurs
     sim = Simulation()
 
-    sim.agents[1] = Agent(
+    sim.traders[1] = Trader(
+            model=sim,
         agent_id=1,
         initial_cash=1000,
         initial_position=10,
         strategy=None,
     )
 
-    sim.agents[2] = Agent(
+    sim.traders[2] = Trader(
+            model=sim,
         agent_id=2,
         initial_cash=1000,
         initial_position=10,
@@ -84,39 +87,41 @@ def test_agents_gains_open_orders():
     sim.requests.append(req2)
 
     assert len(sim.requests) == 2
-    assert len(sim.agents[1].open_asks) == 0
-    assert len(sim.agents[1].open_bids) == 0
-    assert len(sim.agents[2].open_asks) == 0
-    assert len(sim.agents[2].open_bids) == 0
+    assert len(sim.traders[1].open_asks) == 0
+    assert len(sim.traders[1].open_bids) == 0
+    assert len(sim.traders[2].open_asks) == 0
+    assert len(sim.traders[2].open_bids) == 0
 
     sim.apply_request()
 
     assert len(sim.requests) == 1
-    assert len(sim.agents[1].open_asks) == 0
-    assert len(sim.agents[1].open_bids) == 1
-    assert len(sim.agents[2].open_asks) == 0
-    assert len(sim.agents[2].open_bids) == 0
+    assert len(sim.traders[1].open_asks) == 0
+    assert len(sim.traders[1].open_bids) == 1
+    assert len(sim.traders[2].open_asks) == 0
+    assert len(sim.traders[2].open_bids) == 0
 
     sim.apply_request()
 
     assert len(sim.requests) == 0
-    assert len(sim.agents[1].open_asks) == 0
-    assert len(sim.agents[1].open_bids) == 1
-    assert len(sim.agents[2].open_asks) == 1
-    assert len(sim.agents[2].open_bids) == 0
+    assert len(sim.traders[1].open_asks) == 0
+    assert len(sim.traders[1].open_bids) == 1
+    assert len(sim.traders[2].open_asks) == 1
+    assert len(sim.traders[2].open_bids) == 0
 
 
 def test_completing_orders():
     sim = Simulation()
     
-    sim.agents[1] = Agent(
+    sim.traders[1] = Trader(
+            model=sim,
         agent_id=1,
         initial_cash=1000,
         initial_position=10,
         strategy=None,
     )
 
-    sim.agents[2] = Agent(
+    sim.traders[2] = Trader(
+            model=sim,
         agent_id=2,
         initial_cash=1000,
         initial_position=10,
@@ -169,17 +174,17 @@ def test_completing_orders():
     sim.apply_request()
 
     assert len(sim.requests) == 1
-    assert len(sim.agents[1].open_asks) == 0
-    assert len(sim.agents[1].open_bids) == 2
-    assert len(sim.agents[2].open_asks) == 0
-    assert len(sim.agents[2].open_bids) == 0
+    assert len(sim.traders[1].open_asks) == 0
+    assert len(sim.traders[1].open_bids) == 2
+    assert len(sim.traders[2].open_asks) == 0
+    assert len(sim.traders[2].open_bids) == 0
 
     sim.apply_request()
     assert len(sim.requests) == 0
-    assert len(sim.agents[1].open_asks) == 0
-    assert len(sim.agents[1].open_bids) == 1
-    assert len(sim.agents[2].open_asks) == 0
-    assert len(sim.agents[2].open_bids) == 0
+    assert len(sim.traders[1].open_asks) == 0
+    assert len(sim.traders[1].open_bids) == 1
+    assert len(sim.traders[2].open_asks) == 0
+    assert len(sim.traders[2].open_bids) == 0
 
 
 
@@ -188,7 +193,8 @@ def test_completing_orders():
 def test_cancelling_orders():
     sim = Simulation()
         
-    sim.agents[1] = Agent(
+    sim.traders[1] = Trader(
+            model=sim,
         agent_id=1,
         initial_cash=1000,
         initial_position=10,
@@ -213,10 +219,10 @@ def test_cancelling_orders():
     sim.requests.append(req1)
     sim.requests.append(req2)
     sim.apply_request()
-    assert len(sim.agents[1].open_bids) == 1
+    assert len(sim.traders[1].open_bids) == 1
     assert not ord1.cancelled
     sim.apply_request()
-    assert len(sim.agents[1].open_bids) == 0
+    assert len(sim.traders[1].open_bids) == 0
     assert ord1.cancelled
 
 
@@ -226,13 +232,15 @@ def test_market_order_doesnt_become_open():
     # neither agent should have open orders
     sim = Simulation()
             
-    sim.agents[1] = Agent(
+    sim.traders[1] = Trader(
+            model=sim,
         agent_id=1,
         initial_cash=1000,
         initial_position=10,
         strategy=None,
     )
-    sim.agents[2] = Agent(
+    sim.traders[2] = Trader(
+            model=sim,
         agent_id=2,
         initial_cash=1000,
         initial_position=10,
@@ -266,14 +274,14 @@ def test_market_order_doesnt_become_open():
     sim.requests.append(req2)
 
     sim.apply_request()
-    assert len(sim.agents[1].open_asks) == 1
-    assert len(sim.agents[1].open_bids) == 0
+    assert len(sim.traders[1].open_asks) == 1
+    assert len(sim.traders[1].open_bids) == 0
 
     sim.apply_request()
-    assert len(sim.agents[1].open_asks) == 0
-    assert len(sim.agents[1].open_bids) == 0
-    assert len(sim.agents[2].open_asks) == 0
-    assert len(sim.agents[2].open_bids) == 0
+    assert len(sim.traders[1].open_asks) == 0
+    assert len(sim.traders[1].open_bids) == 0
+    assert len(sim.traders[2].open_asks) == 0
+    assert len(sim.traders[2].open_bids) == 0
     assert ord2.remaining_qty == 1
 
     

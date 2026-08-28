@@ -1,16 +1,18 @@
 from order_book import OrderBook
-from agents import Agent
+from agents import Trader
 from models import MatchResult, Order, OrdType, Request, ReqType, Side, Trade, SimulationSnapshot, AgentSnapshot
 
 from collections import deque
 import random
 from matplotlib import pyplot as plt
+import mesa
 
 
-class Simulation:
+class Simulation(mesa.Model):
     def __init__(self, initial_price: int = 100):
+        super().__init__()
         self.book: OrderBook = OrderBook()
-        self.agents: dict[int, Agent] = {} # key = agent_id 
+        self.traders: dict[int, Trader] = {} # key = agent_id
         self.requests: deque[Request] = deque() # queue of orders waiting to be applied
         self.sim_history: list[SimulationSnapshot] = []
 
@@ -24,7 +26,7 @@ class Simulation:
     def get_requests(self) -> None:
         temp_requests: list[Request] = []
         
-        for agent in self.agents.values():
+        for agent in self.traders.values():
             decision = agent.decide_action(self.book, self.timestamp)
 
             if decision is not None:
@@ -53,19 +55,19 @@ class Simulation:
             order: Order = self.book.cancel_order(req.order)
             if order.cancelled:
                 if order.side == Side.BID: # if we stop our buy, then we should gain effective cash again, 
-                    self.agents[order.agent_id].effective_cash += order.remaining_qty * order.price
-                    self.agents[order.agent_id].open_bids.remove(order)
+                    self.traders[order.agent_id].effective_cash += order.remaining_qty * order.price
+                    self.traders[order.agent_id].open_bids.remove(order)
                 elif order.side == Side.ASK:
-                    self.agents[order.agent_id].effective_position += order.remaining_qty
-                    self.agents[order.agent_id].open_asks.remove(order)
+                    self.traders[order.agent_id].effective_position += order.remaining_qty
+                    self.traders[order.agent_id].open_asks.remove(order)
                 else:
                     raise ValueError("Invalid order type")
 
         elif req.req_type == ReqType.PLACE:
-            result: MatchResult = self.book.match_order(req.order, budget=self.agents[req.order.agent_id].effective_cash)
+            result: MatchResult = self.book.match_order(req.order, budget=self.traders[req.order.agent_id].effective_cash)
             self.apply_trades(result.trades)
             self.update_agent_open_orders(result.completed_orders, req.order)
-            agent = self.agents[req.order.agent_id]
+            agent = self.traders[req.order.agent_id]
             if req.order.ord_type == OrdType.MARKET:
                 if req.order.side == Side.BID:
                     agent.effective_cash -= sum(
@@ -96,20 +98,20 @@ class Simulation:
         while completed: # remove completed orders from the agent's open orders
             current: Order = completed.pop()
             if current.side == Side.BID:
-                if current in self.agents[current.agent_id].open_bids:
-                    self.agents[current.agent_id].open_bids.remove(current)
+                if current in self.traders[current.agent_id].open_bids:
+                    self.traders[current.agent_id].open_bids.remove(current)
             elif current.side == Side.ASK:
-                if current in self.agents[current.agent_id].open_asks:
-                    self.agents[current.agent_id].open_asks.remove(current)
+                if current in self.traders[current.agent_id].open_asks:
+                    self.traders[current.agent_id].open_asks.remove(current)
             else:
                 raise ValueError("Invalid order side")
             
         # add the new order to agent's open orders
         if new.remaining_qty > 0 and new.ord_type == OrdType.LIMIT:
             if new.side == Side.BID:
-                self.agents[new.agent_id].open_bids.append(new)
+                self.traders[new.agent_id].open_bids.append(new)
             elif new.side == Side.ASK:
-                self.agents[new.agent_id].open_asks.append(new)
+                self.traders[new.agent_id].open_asks.append(new)
             else:
                 raise ValueError("Invalid order side")
         
@@ -127,14 +129,14 @@ class Simulation:
             qty = trade.quantity
 
             # update the actual stats
-            self.agents[trade.buy_agent_id].current_cash -= price
-            self.agents[trade.buy_agent_id].current_position += qty
-            self.agents[trade.sell_agent_id].current_cash += price
-            self.agents[trade.sell_agent_id].current_position -= qty
+            self.traders[trade.buy_agent_id].current_cash -= price
+            self.traders[trade.buy_agent_id].current_position += qty
+            self.traders[trade.sell_agent_id].current_cash += price
+            self.traders[trade.sell_agent_id].current_position -= qty
 
             # also update the effective position/cash - effective is what we use to guage whether someone can buy
-            self.agents[trade.buy_agent_id].effective_position += qty
-            self.agents[trade.sell_agent_id].effective_cash += price
+            self.traders[trade.buy_agent_id].effective_position += qty
+            self.traders[trade.sell_agent_id].effective_cash += price
 
 
     def run_sim(self, steps: int) -> None:
@@ -177,7 +179,7 @@ class Simulation:
         return sim_snap
 
         
-    def get_agent_snapshot(self, agent: Agent) -> AgentSnapshot:
+    def get_agent_snapshot(self, agent: Trader) -> AgentSnapshot:
         
         # Get appropriate price
         best_bid = self.book.biggest_bid()
@@ -208,6 +210,6 @@ class Simulation:
                 )
 
     def get_agents_snapshot(self) -> None:
-        for id in self.agents:
-            agent = self.agents[id]
+        for id in self.traders:
+            agent = self.traders[id]
             agent.snapshots.append(self.get_agent_snapshot(agent))

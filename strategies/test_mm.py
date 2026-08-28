@@ -1,6 +1,6 @@
 import random
 
-from agents import Agent
+from agents import Trader
 from models import Order, OrdType, Request, ReqType, Side
 from strategies.helper_functions import cancellation_request, placement_request
 from simulation import Simulation
@@ -12,8 +12,8 @@ from testing_starters import def_agent, def_ask, def_bid, place
 
 def test_cancellation_request_tolerance_check():
     sim = Simulation()
-    sim.agents[1] = def_agent(1)
-    sim.agents[2] = def_agent(2)
+    sim.traders[1] = def_agent(sim, 1)
+    sim.traders[2] = def_agent(sim, 2)
 
     ask = def_ask(agent_id=1,
                   price=110)
@@ -37,7 +37,7 @@ def test_cancellation_request_tolerance_check():
     sim.apply_request()
     sim.apply_request()
 
-    assert sim.agents[2].open_asks == [bad_ask]
+    assert sim.traders[2].open_asks == [bad_ask]
 
     # say halfspread == 2
     # ask = midprice + halfspread
@@ -52,7 +52,7 @@ def test_cancellation_request_tolerance_check():
     req4 = cancellation_request(
         ask=ask,
         bid=bid,
-        agent=sim.agents[2],
+        agent=sim.traders[2],
         timestamp=0,
         time_req=0,
         tolerance=3,
@@ -66,7 +66,7 @@ def test_cancellation_request_tolerance_check():
     req5 = cancellation_request(
         ask=ask,
         bid=bid,
-        agent=sim.agents[2],
+        agent=sim.traders[2],
         timestamp=0,
         time_req=0,
         tolerance=0,
@@ -79,14 +79,14 @@ def test_cancellation_request_tolerance_check():
 
     sim.apply_request()
 
-    assert sim.agents[2].open_asks == []
+    assert sim.traders[2].open_asks == []
 
 
 
 def test_cancellation_request_chooses_correct_order():
     sim = Simulation()
-    sim.agents[1] = def_agent(1)
-    sim.agents[2] = def_agent(2)
+    sim.traders[1] = def_agent(sim, 1)
+    sim.traders[2] = def_agent(sim, 2)
 
     ask = def_ask(agent_id=1,
                   price=110)
@@ -117,8 +117,8 @@ def test_cancellation_request_chooses_correct_order():
     sim.apply_request()
     sim.apply_request()
 
-    assert sim.agents[2].open_asks == [bad_ask]
-    assert sim.agents[2].open_bids == [bad_bid]
+    assert sim.traders[2].open_asks == [bad_ask]
+    assert sim.traders[2].open_bids == [bad_bid]
 
     # say halfspread == 2
     # ask = midprice + halfspread
@@ -133,7 +133,7 @@ def test_cancellation_request_chooses_correct_order():
     req4 = cancellation_request(
         ask=ask,
         bid=bid,
-        agent=sim.agents[2],
+        agent=sim.traders[2],
         timestamp=0,
         time_req=0,
         tolerance=3,
@@ -146,15 +146,15 @@ def test_cancellation_request_chooses_correct_order():
     sim.requests.append(req4)
     sim.apply_request()
 
-    assert sim.agents[2].open_bids == []
-    assert sim.agents[2].open_asks == [bad_ask]
+    assert sim.traders[2].open_bids == []
+    assert sim.traders[2].open_asks == [bad_ask]
 
 
 # young order doesnt cancel
 def test_cancellation_request_young_order():
     sim = Simulation()
-    sim.agents[1] = def_agent(1)
-    sim.agents[2] = def_agent(2)
+    sim.traders[1] = def_agent(sim, 1)
+    sim.traders[2] = def_agent(sim, 2)
 
     ask = def_ask(agent_id=1,
                     price=110)
@@ -178,7 +178,7 @@ def test_cancellation_request_young_order():
     sim.apply_request()
     sim.apply_request()
 
-    assert sim.agents[2].open_asks == [bad_ask]
+    assert sim.traders[2].open_asks == [bad_ask]
 
     # say halfspread == 2
     # ask = midprice + halfspread
@@ -193,7 +193,7 @@ def test_cancellation_request_young_order():
     req4 = cancellation_request(
         ask=ask,
         bid=bid,
-        agent=sim.agents[2],
+        agent=sim.traders[2],
         timestamp=0,
         time_req=2,
         tolerance=0,

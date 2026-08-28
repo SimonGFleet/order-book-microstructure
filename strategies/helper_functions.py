@@ -1,13 +1,13 @@
 import random
 
-from agents import Agent
+from agents import Trader
 from models import Order, OrdType, Request, ReqType, Side
 
 
 def cancellation_request(
     ask: float,
     bid: float,
-    agent: Agent,
+    agent: Trader,
     timestamp: int,
     time_req: int,
     tolerance: float,
@@ -62,7 +62,7 @@ def cancellation_request(
 def placement_request(
     ask: float,
     bid: float,
-    agent: Agent,
+    agent: Trader,
     quantity: int,
     rng: random.Random,
     side: Side | None = None,

@@ -5,8 +5,8 @@ from models import Order, OrdType, Side
 
 def test_market_ask_updates_effective_position():
     sim = Simulation()
-    sim.agents[1] = def_agent(1, initial_position=10)
-    sim.agents[2] = def_agent(2, initial_cash=1000, initial_position=0)
+    sim.traders[1] = def_agent(sim, 1, initial_position=10)
+    sim.traders[2] = def_agent(sim, 2, initial_cash=1000, initial_position=0)
 
     bid = def_bid(agent_id=2, price=100, quantity=5)
     market_ask = Order(
@@ -22,7 +22,7 @@ def test_market_ask_updates_effective_position():
     sim.requests.append(place(market_ask))
     sim.apply_request()
 
-    assert sim.agents[1].current_position == 5
-    assert sim.agents[1].effective_position == 5
-    assert sim.agents[2].current_position == 5
-    assert sim.agents[2].effective_position == 5
+    assert sim.traders[1].current_position == 5
+    assert sim.traders[1].effective_position == 5
+    assert sim.traders[2].current_position == 5
+    assert sim.traders[2].effective_position == 5

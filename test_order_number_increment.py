@@ -1,5 +1,5 @@
 from simulation import Simulation
-from agents import Agent
+from agents import Trader
 from strategies import Random
 from models import Order, Request
 
@@ -16,7 +16,8 @@ def test_order_ids_are_generated():
         reference_price=sim.initial_price,
     )
 
-    sim.agents[1] = Agent(
+    sim.traders[1] = Trader(
+            model=sim,
         agent_id=1,
         initial_cash=1000,
         strategy=strat1,

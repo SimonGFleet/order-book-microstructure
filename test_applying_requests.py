@@ -1,6 +1,6 @@
 from order_book import OrderBook
 from models import MatchResult, Order, OrdType, Request, ReqType, Side, Trade
-from agents import Agent
+from agents import Trader
 from simulation import Simulation
 from strategies import Strategy
 
@@ -16,13 +16,15 @@ def test_empty_requests():
 def test_place_non_crossing_order():
     sim: Simulation = Simulation()
 
-    sim.agents[1] = Agent(
+    sim.traders[1] = Trader(
+            model=sim,
         agent_id=1,
         initial_cash=1000,
         strategy=Strategy(),
         initial_position=10,
         )
-    sim.agents[2] = Agent(
+    sim.traders[2] = Trader(
+            model=sim,
             agent_id=2,
             initial_cash=1000,
             strategy=Strategy(),
@@ -58,10 +60,10 @@ def test_place_non_crossing_order():
     sim.apply_request() # this should do similar
 
     # the agents remain identical to their creation
-    assert sim.agents[1].current_cash == 1000
-    assert sim.agents[2].current_cash == 1000
-    assert sim.agents[1].current_position == 10
-    assert sim.agents[2].current_position == 0
+    assert sim.traders[1].current_cash == 1000
+    assert sim.traders[2].current_cash == 1000
+    assert sim.traders[1].current_position == 10
+    assert sim.traders[2].current_position == 0
 
     assert len(sim.requests) == 0
     assert len(sim.book.trades) == 0
@@ -71,13 +73,15 @@ def test_place_non_crossing_order():
 def test_place_crossing_order():
     sim: Simulation = Simulation()
 
-    sim.agents[1] = Agent(
+    sim.traders[1] = Trader(
+            model=sim,
         agent_id=1,
         initial_cash=1000,
         strategy=Strategy(),
         initial_position=10,
         )
-    sim.agents[2] = Agent(
+    sim.traders[2] = Trader(
+            model=sim,
             agent_id=2,
             initial_cash=1000,
             strategy=Strategy(),
@@ -116,15 +120,16 @@ def test_place_crossing_order():
     assert len(sim.requests) == 0
 
     assert len(sim.book.trades) == 1
-    assert sim.agents[1].current_position == 0
-    assert sim.agents[2].current_position == 10
-    assert sim.agents[1].current_cash == 2000
-    assert sim.agents[2].current_cash == 0
+    assert sim.traders[1].current_position == 0
+    assert sim.traders[2].current_position == 10
+    assert sim.traders[1].current_cash == 2000
+    assert sim.traders[2].current_cash == 0
 
 def test_cancellation_request():
     sim: Simulation = Simulation()
 
-    sim.agents[1] = Agent(
+    sim.traders[1] = Trader(
+            model=sim,
         agent_id=1,
         initial_cash=1000,
         strategy=Strategy(),

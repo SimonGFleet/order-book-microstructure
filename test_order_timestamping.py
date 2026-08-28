@@ -18,8 +18,8 @@ def test_timestamps_increase_on_each_step():
         reference_price=sim.initial_price,
     )
 
-    sim.agents[1] = def_agent(1, strat1, initial_cash=100000, initial_position=1000)
-    sim.agents[2] = def_agent(2, strat1, initial_cash=100000, initial_position=1000)
+    sim.traders[1] = def_agent(sim, 1, strat1, initial_cash=100000, initial_position=1000)
+    sim.traders[2] = def_agent(sim, 2, strat1, initial_cash=100000, initial_position=1000)
 
     sim.run_sim(10)
 
