@@ -22,6 +22,7 @@ def cancellation_request(
         and order.price is not None
         and timestamp >= order.creation_time + time_req
     )
+    
     worst_ask = max(
         eligible_asks,
         key=lambda order: abs(order.price - ask),
@@ -35,6 +36,7 @@ def cancellation_request(
         and order.price is not None
         and timestamp >= order.creation_time + time_req
     )
+    
     worst_bid = max(
         eligible_bids,
         key=lambda order: abs(order.price - bid),
@@ -77,7 +79,7 @@ def placement_request(
 
     if side is None:
         if not has_ask and not has_bid:
-            side = Side.ASK if rng.randint(0, 1) == 0 else Side.BID
+            side = rng.choice([Side.BID, Side.ASK])
         elif not has_bid:
             side = Side.BID
         elif not has_ask:
