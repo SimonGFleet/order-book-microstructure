@@ -63,11 +63,11 @@ class Analytics():
 
     # AGENT PLOTS:
 
-    def plot_agent_wealth(self, agent_id: int):
-        agent = self.sim.traders[agent_id]
+    def plot_trader_wealth(self, trader_id: int):
+        trader = self.sim.traders[trader_id]
 
-        timestamps = [snap.timestamp for snap in agent.snapshots]
-        wealth = [snap.wealth for snap in agent.snapshots]
+        timestamps = [snap.timestamp for snap in trader.snapshots]
+        wealth = [snap.wealth for snap in trader.snapshots]
 
         plt.plot(timestamps, wealth)
         plt.xlabel("Time Steps")
@@ -75,11 +75,11 @@ class Analytics():
         plt.title("Wealth over Time")
         plt.show()
 
-    def plot_agent_pnl(self, agent_id: int):
-        agent = self.sim.traders[agent_id]
+    def plot_trader_pnl(self, trader_id: int):
+        trader = self.sim.traders[trader_id]
 
-        timestamps = [snap.timestamp for snap in agent.snapshots]
-        pnl = [snap.pnl for snap in agent.snapshots]
+        timestamps = [snap.timestamp for snap in trader.snapshots]
+        pnl = [snap.pnl for snap in trader.snapshots]
 
         plt.plot(timestamps, pnl)
         plt.xlabel("Time Steps")
@@ -191,7 +191,7 @@ class Analytics():
         fig.text(
             0.08,
             0.925,
-            "10 random agents + 1 naive market maker · price-time priority · limit and market orders",
+            "10 random traders + 1 naive market maker · price-time priority · limit and market orders",
             fontsize=11,
             alpha=0.7
         )

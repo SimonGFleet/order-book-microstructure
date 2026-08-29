@@ -1,8 +1,8 @@
 from simulation import Simulation
-from agents import Trader
+from traders import Trader
 from strategies import Random
 from models import Order, OrdType, Request, ReqType, Side
-from testing_starters import def_bid, def_agent, def_ask, place
+from testing_starters import def_bid, def_trader, def_ask, place
 
 
 def test_limit_order_affects_effective_cash():
@@ -30,22 +30,22 @@ def test_limit_order_affects_effective_cash():
 
     sim.traders[1] = Trader(
             model=sim,
-        agent_id=1,
+        trader_id=1,
         initial_cash=1000,
         strategy=strat1,
         initial_position=10,
         )
     sim.traders[2] = Trader(
             model=sim,
-            agent_id=2,
+            trader_id=2,
             initial_cash=1000,
             strategy=strat2,
             initial_position=10,
         )
 
     # in an empty market:  
-    # agent 1 should always try to buy one stock for 100
-    # agent 2 should always try to sell one stock for 100
+    # trader 1 should always try to buy one stock for 100
+    # trader 2 should always try to sell one stock for 100
 
     # Make their choice
     sim.get_requests()
@@ -88,7 +88,7 @@ def test_cancelling_request_returns_effective_cash():
 
     sim.traders[1] = Trader(
             model=sim,
-        agent_id=1,
+        trader_id=1,
         initial_cash=1000,
         strategy=strat1,
         initial_position=10,
@@ -100,7 +100,7 @@ def test_cancelling_request_returns_effective_cash():
         ord_type=OrdType.LIMIT,
         order_id=1,
         price=100,
-        agent_id=1,
+        trader_id=1,
     )
 
     sim.get_requests()
@@ -129,11 +129,11 @@ def test_cancelling_request_returns_effective_cash():
 
 def test_limit_bid_executing_for_less_than_price():
     sim = Simulation()
-    sim.traders[1] = def_agent(sim, 1)
-    sim.traders[2] = def_agent(sim, 2)
+    sim.traders[1] = def_trader(sim, 1)
+    sim.traders[2] = def_trader(sim, 2)
 
-    ord1 = def_ask(agent_id=1, price=90)
-    ord2 = def_bid(agent_id=2)
+    ord1 = def_ask(trader_id=1, price=90)
+    ord2 = def_bid(trader_id=2)
 
     req1 = place(ord1)
     req2 = place(ord2)
@@ -151,16 +151,16 @@ def test_limit_bid_executing_for_less_than_price():
 
 
 def test_crossing_limit_orders():
-    # agent1 submits an ask for 90, then agent2 submits a bid for 100, both start at 1000,
-    # finals: agent1: 1900 cash, position == 0. Trader 2: should be: 100 cash, 20 postion.
+    # trader1 submits an ask for 90, then trader2 submits a bid for 100, both start at 1000,
+    # finals: trader1: 1900 cash, position == 0. Trader 2: should be: 100 cash, 20 postion.
     sim = Simulation()
-    ag1 = def_agent(sim, 1)
-    ag2 = def_agent(sim, 2)
-    sim.traders[1] = ag1
-    sim.traders[2] = ag2
+    trader1 = def_trader(sim, 1)
+    trader2 = def_trader(sim, 2)
+    sim.traders[1] = trader1
+    sim.traders[2] = trader2
 
-    ord1 = def_ask(agent_id=1, price=90)
-    ord2 = def_bid(agent_id=2)
+    ord1 = def_ask(trader_id=1, price=90)
+    ord2 = def_bid(trader_id=2)
     req1 = place(ord1)
     req2 = place(ord2)
     sim.requests.append(req1)
@@ -168,12 +168,12 @@ def test_crossing_limit_orders():
     sim.apply_request()
     sim.apply_request()
 
-    assert ag1.current_position == 0
-    assert ag1.effective_position == 0
-    assert ag2.current_position == 20
-    assert ag2.effective_position == 20
+    assert trader1.current_position == 0
+    assert trader1.effective_position == 0
+    assert trader2.current_position == 20
+    assert trader2.effective_position == 20
 
-    assert ag1.current_cash == 1900
-    assert ag1.effective_cash == 1900
-    assert ag2.current_cash == 100
-    assert ag2.effective_cash == 100
+    assert trader1.current_cash == 1900
+    assert trader1.effective_cash == 1900
+    assert trader2.current_cash == 100
+    assert trader2.effective_cash == 100

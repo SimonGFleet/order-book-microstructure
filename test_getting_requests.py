@@ -1,6 +1,6 @@
 from order_book import OrderBook
 from models import Order, OrdType, Request, ReqType, Side, Trade
-from agents import Trader
+from traders import Trader
 from simulation import Simulation
 from strategies import Random
 
@@ -20,7 +20,7 @@ def test_prob_0_gives_no_requests():
 
     sim.traders[1] = Trader(
             model=sim,
-        agent_id=1,
+        trader_id=1,
         initial_cash=1000,
         strategy=strat1,
         initial_position=10,

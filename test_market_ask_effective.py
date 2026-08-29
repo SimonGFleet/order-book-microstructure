@@ -1,16 +1,16 @@
 # when we do a market ask, it should add the correct positioning
 from simulation import Simulation
-from testing_starters import def_agent, def_bid, place
+from testing_starters import def_trader, def_bid, place
 from models import Order, OrdType, Side
 
 def test_market_ask_updates_effective_position():
     sim = Simulation()
-    sim.traders[1] = def_agent(sim, 1, initial_position=10)
-    sim.traders[2] = def_agent(sim, 2, initial_cash=1000, initial_position=0)
+    sim.traders[1] = def_trader(sim, 1, initial_position=10)
+    sim.traders[2] = def_trader(sim, 2, initial_cash=1000, initial_position=0)
 
-    bid = def_bid(agent_id=2, price=100, quantity=5)
+    bid = def_bid(trader_id=2, price=100, quantity=5)
     market_ask = Order(
-        agent_id=1,
+        trader_id=1,
         quantity=5,
         side=Side.ASK,
         ord_type=OrdType.MARKET,

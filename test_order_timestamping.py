@@ -1,6 +1,6 @@
 # timestamp is owned by the simulation
 # when we call the function run sim - it gets requests, applies them, then increases the timestamp
-from testing_starters import def_agent, def_ask, def_bid
+from testing_starters import def_trader, def_ask, def_bid
 from simulation import Simulation
 from models import Request, ReqType
 from strategies import Random
@@ -18,8 +18,8 @@ def test_timestamps_increase_on_each_step():
         reference_price=sim.initial_price,
     )
 
-    sim.traders[1] = def_agent(sim, 1, strat1, initial_cash=100000, initial_position=1000)
-    sim.traders[2] = def_agent(sim, 2, strat1, initial_cash=100000, initial_position=1000)
+    sim.traders[1] = def_trader(sim, 1, strat1, initial_cash=100000, initial_position=1000)
+    sim.traders[2] = def_trader(sim, 2, strat1, initial_cash=100000, initial_position=1000)
 
     sim.run_sim(10)
 

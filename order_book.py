@@ -86,13 +86,13 @@ class OrderBook:
             if order.side == Side.BID:
                 buyer_id = order.order_id
                 seller_id = resting.order_id
-                buyer_agent_id = order.agent_id
-                seller_agent_id = resting.agent_id
+                buyer_trader_id = order.trader_id
+                seller_trader_id = resting.trader_id
             else:
                 buyer_id = resting.order_id
                 seller_id = order.order_id
-                buyer_agent_id = resting.agent_id
-                seller_agent_id = order.agent_id
+                buyer_trader_id = resting.trader_id
+                seller_trader_id = order.trader_id
 
 
             traded_quantity = min(resting.remaining_qty, order.remaining_qty)
@@ -117,8 +117,8 @@ class OrderBook:
                         buy_order_id=buyer_id,
                         sell_order_id=seller_id,
                         event_number=self.event_number,
-                        buy_agent_id=buyer_agent_id,
-                        sell_agent_id=seller_agent_id,
+                        buyer_trader_id=buyer_trader_id,
+                        seller_trader_id=seller_trader_id,
                     )
 
             if order.ord_type == OrdType.MARKET and order.side == Side.BID:

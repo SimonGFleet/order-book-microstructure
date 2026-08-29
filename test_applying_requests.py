@@ -1,6 +1,6 @@
 from order_book import OrderBook
 from models import MatchResult, Order, OrdType, Request, ReqType, Side, Trade
-from agents import Trader
+from traders import Trader
 from simulation import Simulation
 from strategies import Strategy
 
@@ -18,14 +18,14 @@ def test_place_non_crossing_order():
 
     sim.traders[1] = Trader(
             model=sim,
-        agent_id=1,
+        trader_id=1,
         initial_cash=1000,
         strategy=Strategy(),
         initial_position=10,
         )
     sim.traders[2] = Trader(
             model=sim,
-            agent_id=2,
+            trader_id=2,
             initial_cash=1000,
             strategy=Strategy(),
             initial_position=0,
@@ -39,7 +39,7 @@ def test_place_non_crossing_order():
                 side=Side.ASK,
                 ord_type=OrdType.LIMIT,
                 price=101,
-                agent_id=1,
+                trader_id=1,
             )
         )
     )
@@ -52,14 +52,14 @@ def test_place_non_crossing_order():
                 side=Side.BID,
                 ord_type=OrdType.LIMIT,
                 price=99,
-                agent_id=2,
+                trader_id=2,
             )
         )
     )
     sim.apply_request() # this should just place the order, not make any trades
     sim.apply_request() # this should do similar
 
-    # the agents remain identical to their creation
+    # the traders remain identical to their creation
     assert sim.traders[1].current_cash == 1000
     assert sim.traders[2].current_cash == 1000
     assert sim.traders[1].current_position == 10
@@ -75,14 +75,14 @@ def test_place_crossing_order():
 
     sim.traders[1] = Trader(
             model=sim,
-        agent_id=1,
+        trader_id=1,
         initial_cash=1000,
         strategy=Strategy(),
         initial_position=10,
         )
     sim.traders[2] = Trader(
             model=sim,
-            agent_id=2,
+            trader_id=2,
             initial_cash=1000,
             strategy=Strategy(),
             initial_position=0,
@@ -96,7 +96,7 @@ def test_place_crossing_order():
                 side=Side.ASK,
                 ord_type=OrdType.LIMIT,
                 price=100,
-                agent_id=1,
+                trader_id=1,
             )
         )
     )
@@ -109,7 +109,7 @@ def test_place_crossing_order():
                 side=Side.BID,
                 ord_type=OrdType.LIMIT,
                 price=100,
-                agent_id=2,
+                trader_id=2,
             )
         )
     )
@@ -130,7 +130,7 @@ def test_cancellation_request():
 
     sim.traders[1] = Trader(
             model=sim,
-        agent_id=1,
+        trader_id=1,
         initial_cash=1000,
         strategy=Strategy(),
         initial_position=10,
@@ -142,7 +142,7 @@ def test_cancellation_request():
                         side=Side.ASK,
                         ord_type=OrdType.LIMIT,
                         price=100,
-                        agent_id=1,
+                        trader_id=1,
                     )
 
     sim.requests.append(

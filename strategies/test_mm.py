@@ -1,29 +1,29 @@
 import random
 
-from agents import Trader
+from traders import Trader
 from models import Order, OrdType, Request, ReqType, Side
 from strategies.helper_functions import cancellation_request, placement_request
 from simulation import Simulation
 from order_book import OrderBook
-from testing_starters import def_agent, def_ask, def_bid, place
+from testing_starters import def_trader, def_ask, def_bid, place
 
 # we need to check the cancellation_request function
 # should have situations for cancelling both sides as well as nothing
 
 def test_cancellation_request_tolerance_check():
     sim = Simulation()
-    sim.traders[1] = def_agent(sim, 1)
-    sim.traders[2] = def_agent(sim, 2)
+    sim.traders[1] = def_trader(sim, 1)
+    sim.traders[2] = def_trader(sim, 2)
 
-    ask = def_ask(agent_id=1,
+    ask = def_ask(trader_id=1,
                   price=110)
-    bid = def_bid(agent_id=1,
+    bid = def_bid(trader_id=1,
                   price=90)
 
     req1 = place(ask)
     req2 = place(bid)
 
-    bad_ask = def_ask(agent_id=2,
+    bad_ask = def_ask(trader_id=2,
                       price=100)
     bad_ask.creation_time = 0
 
@@ -52,7 +52,7 @@ def test_cancellation_request_tolerance_check():
     req4 = cancellation_request(
         ask=ask,
         bid=bid,
-        agent=sim.traders[2],
+        trader=sim.traders[2],
         timestamp=0,
         time_req=0,
         tolerance=3,
@@ -66,7 +66,7 @@ def test_cancellation_request_tolerance_check():
     req5 = cancellation_request(
         ask=ask,
         bid=bid,
-        agent=sim.traders[2],
+        trader=sim.traders[2],
         timestamp=0,
         time_req=0,
         tolerance=0,
@@ -85,22 +85,22 @@ def test_cancellation_request_tolerance_check():
 
 def test_cancellation_request_chooses_correct_order():
     sim = Simulation()
-    sim.traders[1] = def_agent(sim, 1)
-    sim.traders[2] = def_agent(sim, 2)
+    sim.traders[1] = def_trader(sim, 1)
+    sim.traders[2] = def_trader(sim, 2)
 
-    ask = def_ask(agent_id=1,
+    ask = def_ask(trader_id=1,
                   price=110)
-    bid = def_bid(agent_id=1,
+    bid = def_bid(trader_id=1,
                   price=90)
 
     req1 = place(ask)
     req2 = place(bid)
 
-    bad_ask = def_ask(agent_id=2,
+    bad_ask = def_ask(trader_id=2,
                       price=100)
     bad_ask.creation_time = 0
 
-    bad_bid = def_bid(agent_id=2,
+    bad_bid = def_bid(trader_id=2,
                           price=60)
     bad_bid.creation_time = 0
 
@@ -133,7 +133,7 @@ def test_cancellation_request_chooses_correct_order():
     req4 = cancellation_request(
         ask=ask,
         bid=bid,
-        agent=sim.traders[2],
+        trader=sim.traders[2],
         timestamp=0,
         time_req=0,
         tolerance=3,
@@ -153,18 +153,18 @@ def test_cancellation_request_chooses_correct_order():
 # young order doesnt cancel
 def test_cancellation_request_young_order():
     sim = Simulation()
-    sim.traders[1] = def_agent(sim, 1)
-    sim.traders[2] = def_agent(sim, 2)
+    sim.traders[1] = def_trader(sim, 1)
+    sim.traders[2] = def_trader(sim, 2)
 
-    ask = def_ask(agent_id=1,
+    ask = def_ask(trader_id=1,
                     price=110)
-    bid = def_bid(agent_id=1,
+    bid = def_bid(trader_id=1,
                     price=90)
 
     req1 = place(ask)
     req2 = place(bid)
 
-    bad_ask = def_ask(agent_id=2,
+    bad_ask = def_ask(trader_id=2,
                         price=100)
     bad_ask.creation_time = 0
 
@@ -193,7 +193,7 @@ def test_cancellation_request_young_order():
     req4 = cancellation_request(
         ask=ask,
         bid=bid,
-        agent=sim.traders[2],
+        trader=sim.traders[2],
         timestamp=0,
         time_req=2,
         tolerance=0,

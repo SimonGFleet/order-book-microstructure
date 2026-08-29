@@ -1,10 +1,10 @@
 from simulation import Simulation
 from strategies import Random
-from agents import Trader
+from traders import Trader
 from models import Order, OrdType, ReqType, Request, Side
 
 
-def test_agent_starts_with_no_open_orders():
+def test_trader_starts_with_no_open_orders():
     sim = Simulation()
     
     strat1 = Random(            # does nothing every time.
@@ -19,7 +19,7 @@ def test_agent_starts_with_no_open_orders():
 
     sim.traders[1] = Trader(
             model=sim,
-        agent_id=1,
+        trader_id=1,
         initial_cash=1000,
         initial_position=10,
         strategy=strat1,
@@ -37,13 +37,13 @@ def test_agent_starts_with_no_open_orders():
 
 
 
-def test_agents_gains_open_orders():
-    # two agents should make orders, they should both gain the order. no matching occurs
+def test_traders_gain_open_orders():
+    # two traders should make orders, they should both gain the order. no matching occurs
     sim = Simulation()
 
     sim.traders[1] = Trader(
             model=sim,
-        agent_id=1,
+        trader_id=1,
         initial_cash=1000,
         initial_position=10,
         strategy=None,
@@ -51,7 +51,7 @@ def test_agents_gains_open_orders():
 
     sim.traders[2] = Trader(
             model=sim,
-        agent_id=2,
+        trader_id=2,
         initial_cash=1000,
         initial_position=10,
         strategy=None,
@@ -65,7 +65,7 @@ def test_agents_gains_open_orders():
         ord_type=OrdType.LIMIT,
         order_id=0,
         price=95,
-        agent_id=1
+        trader_id=1
     )
     req1: Request = Request(
         req_type=ReqType.PLACE,
@@ -77,7 +77,7 @@ def test_agents_gains_open_orders():
         ord_type=OrdType.LIMIT,
         order_id=1,
         price=105,
-        agent_id=2
+        trader_id=2
     )
     req2: Request = Request(
         req_type=ReqType.PLACE,
@@ -114,7 +114,7 @@ def test_completing_orders():
     
     sim.traders[1] = Trader(
             model=sim,
-        agent_id=1,
+        trader_id=1,
         initial_cash=1000,
         initial_position=10,
         strategy=None,
@@ -122,7 +122,7 @@ def test_completing_orders():
 
     sim.traders[2] = Trader(
             model=sim,
-        agent_id=2,
+        trader_id=2,
         initial_cash=1000,
         initial_position=10,
         strategy=None,
@@ -136,7 +136,7 @@ def test_completing_orders():
         ord_type=OrdType.LIMIT,
         order_id=1,
         price=100,
-        agent_id=1
+        trader_id=1
     )
     req1: Request = Request(
         req_type=ReqType.PLACE,
@@ -148,7 +148,7 @@ def test_completing_orders():
         ord_type=OrdType.LIMIT,
         order_id=2,
         price=99,
-        agent_id=1
+        trader_id=1
     )
     req2: Request = Request(
         req_type=ReqType.PLACE,
@@ -160,7 +160,7 @@ def test_completing_orders():
         ord_type=OrdType.LIMIT,
         order_id=3,
         price=99,
-        agent_id=2
+        trader_id=2
     )
     req3: Request = Request(
         req_type=ReqType.PLACE,
@@ -195,7 +195,7 @@ def test_cancelling_orders():
         
     sim.traders[1] = Trader(
             model=sim,
-        agent_id=1,
+        trader_id=1,
         initial_cash=1000,
         initial_position=10,
         strategy=None,
@@ -206,7 +206,7 @@ def test_cancelling_orders():
         ord_type=OrdType.LIMIT,
         order_id=1,
         price=100,
-        agent_id=1
+        trader_id=1
     )
     req1: Request = Request(
         req_type=ReqType.PLACE,
@@ -228,20 +228,20 @@ def test_cancelling_orders():
 
 
 def test_market_order_doesnt_become_open():
-    # two agents, add limit order, then add non-completing market order, they should partially match, 
-    # neither agent should have open orders
+    # two traders, add limit order, then add non-completing market order, they should partially match, 
+    # neither trader should have open orders
     sim = Simulation()
             
     sim.traders[1] = Trader(
             model=sim,
-        agent_id=1,
+        trader_id=1,
         initial_cash=1000,
         initial_position=10,
         strategy=None,
     )
     sim.traders[2] = Trader(
             model=sim,
-        agent_id=2,
+        trader_id=2,
         initial_cash=1000,
         initial_position=10,
         strategy=None,
@@ -252,7 +252,7 @@ def test_market_order_doesnt_become_open():
         ord_type=OrdType.LIMIT,
         order_id=1,
         price=100,
-        agent_id=1
+        trader_id=1
     )
     ord2: Order = Order(
         quantity=2,
@@ -260,7 +260,7 @@ def test_market_order_doesnt_become_open():
         ord_type=OrdType.MARKET,
         order_id=1,
         price=100,
-        agent_id=2
+        trader_id=2
     )
     req1 = Request(
         req_type=ReqType.PLACE,

@@ -1,6 +1,6 @@
 from order_book import OrderBook
-from agents import Trader
-from models import MatchResult, Order, OrdType, Request, ReqType, Side, Trade, SimulationSnapshot, AgentSnapshot
+from traders import Trader
+from models import MatchResult, Order, OrdType, Request, ReqType, Side, Trade, SimulationSnapshot, TraderSnapshot
 
 from collections import deque
 import random
@@ -9,10 +9,10 @@ import mesa
 
 
 class Simulation(mesa.Model):
-    def __init__(self, initial_price: int = 100):
-        super().__init__()
+    def __init__(self, initial_price: int = 100, seed=None):
+        super().__init__(seed=seed)
         self.book: OrderBook = OrderBook()
-        self.traders: dict[int, Trader] = {} # key = agent_id
+        self.traders: dict[int, Trader] = {} # key = trader_id
         self.requests: deque[Request] = deque() # queue of orders waiting to be applied
         self.sim_history: list[SimulationSnapshot] = []
 
@@ -26,8 +26,8 @@ class Simulation(mesa.Model):
     def get_requests(self) -> None:
         temp_requests: list[Request] = []
         
-        for agent in self.traders.values():
-            decision = agent.decide_action(self.book, self.timestamp)
+        for trader in self.traders.values():
+            decision = trader.decide_action(self.book, self.timestamp)
 
             if decision is not None:
 
@@ -45,7 +45,7 @@ class Simulation(mesa.Model):
     
     def apply_request(self) -> None:
         # might be apply just one order at a time, then the timestep increases
-        # we only do one order at a time so that agents can submit or cancel orders at each time step 
+        # we only do one order at a time so that traders can submit or cancel orders at each time step
         # they can see what the market looks like
         if not self.requests: 
             return
@@ -55,27 +55,27 @@ class Simulation(mesa.Model):
             order: Order = self.book.cancel_order(req.order)
             if order.cancelled:
                 if order.side == Side.BID: # if we stop our buy, then we should gain effective cash again, 
-                    self.traders[order.agent_id].effective_cash += order.remaining_qty * order.price
-                    self.traders[order.agent_id].open_bids.remove(order)
+                    self.traders[order.trader_id].effective_cash += order.remaining_qty * order.price
+                    self.traders[order.trader_id].open_bids.remove(order)
                 elif order.side == Side.ASK:
-                    self.traders[order.agent_id].effective_position += order.remaining_qty
-                    self.traders[order.agent_id].open_asks.remove(order)
+                    self.traders[order.trader_id].effective_position += order.remaining_qty
+                    self.traders[order.trader_id].open_asks.remove(order)
                 else:
                     raise ValueError("Invalid order type")
 
         elif req.req_type == ReqType.PLACE:
-            result: MatchResult = self.book.match_order(req.order, budget=self.traders[req.order.agent_id].effective_cash)
+            result: MatchResult = self.book.match_order(req.order, budget=self.traders[req.order.trader_id].effective_cash)
             self.apply_trades(result.trades)
-            self.update_agent_open_orders(result.completed_orders, req.order)
-            agent = self.traders[req.order.agent_id]
+            self.update_trader_open_orders(result.completed_orders, req.order)
+            trader = self.traders[req.order.trader_id]
             if req.order.ord_type == OrdType.MARKET:
                 if req.order.side == Side.BID:
-                    agent.effective_cash -= sum(
+                    trader.effective_cash -= sum(
                         trade.price * trade.quantity for trade in result.trades
                         )
                     
                 elif req.order.side == Side.ASK:
-                    agent.effective_position -= sum(
+                    trader.effective_position -= sum(
                         trade.quantity for trade in result.trades
                         )
                 else:
@@ -85,33 +85,33 @@ class Simulation(mesa.Model):
                 if req.order.side == Side.BID:
                     trade_cost = sum(trade.price * trade.quantity for trade in result.trades)
                     remaining_price = req.order.price * req.order.remaining_qty
-                    agent.effective_cash -= trade_cost + remaining_price
+                    trader.effective_cash -= trade_cost + remaining_price
                 else:
-                    agent.effective_position -= req.order.quantity
+                    trader.effective_position -= req.order.quantity
             
         else:
             raise ValueError("Request of invalid type")
 
         
 
-    def update_agent_open_orders(self, completed: list[Order], new: Order) -> None:
-        while completed: # remove completed orders from the agent's open orders
+    def update_trader_open_orders(self, completed: list[Order], new: Order) -> None:
+        while completed: # remove completed orders from the trader's open orders
             current: Order = completed.pop()
             if current.side == Side.BID:
-                if current in self.traders[current.agent_id].open_bids:
-                    self.traders[current.agent_id].open_bids.remove(current)
+                if current in self.traders[current.trader_id].open_bids:
+                    self.traders[current.trader_id].open_bids.remove(current)
             elif current.side == Side.ASK:
-                if current in self.traders[current.agent_id].open_asks:
-                    self.traders[current.agent_id].open_asks.remove(current)
+                if current in self.traders[current.trader_id].open_asks:
+                    self.traders[current.trader_id].open_asks.remove(current)
             else:
                 raise ValueError("Invalid order side")
             
-        # add the new order to agent's open orders
+        # add the new order to trader's open orders
         if new.remaining_qty > 0 and new.ord_type == OrdType.LIMIT:
             if new.side == Side.BID:
-                self.traders[new.agent_id].open_bids.append(new)
+                self.traders[new.trader_id].open_bids.append(new)
             elif new.side == Side.ASK:
-                self.traders[new.agent_id].open_asks.append(new)
+                self.traders[new.trader_id].open_asks.append(new)
             else:
                 raise ValueError("Invalid order side")
         
@@ -120,23 +120,23 @@ class Simulation(mesa.Model):
         # can just go until empty applying in any order since its just record keeping.
         for trade in trades:
             # apply to both buyer and seller.
-            if trade.buy_agent_id is None:
-                raise ValueError("No buyer agent id")
-            if trade.sell_agent_id is None:
-                raise ValueError("No seller agent id")
+            if trade.buyer_trader_id is None:
+                raise ValueError("No buyer trader id")
+            if trade.seller_trader_id is None:
+                raise ValueError("No seller trader id")
 
             price = trade.quantity * trade.price
             qty = trade.quantity
 
             # update the actual stats
-            self.traders[trade.buy_agent_id].current_cash -= price
-            self.traders[trade.buy_agent_id].current_position += qty
-            self.traders[trade.sell_agent_id].current_cash += price
-            self.traders[trade.sell_agent_id].current_position -= qty
+            self.traders[trade.buyer_trader_id].current_cash -= price
+            self.traders[trade.buyer_trader_id].current_position += qty
+            self.traders[trade.seller_trader_id].current_cash += price
+            self.traders[trade.seller_trader_id].current_position -= qty
 
             # also update the effective position/cash - effective is what we use to guage whether someone can buy
-            self.traders[trade.buy_agent_id].effective_position += qty
-            self.traders[trade.sell_agent_id].effective_cash += price
+            self.traders[trade.buyer_trader_id].effective_position += qty
+            self.traders[trade.seller_trader_id].effective_cash += price
 
 
     def run_sim(self, steps: int) -> None:
@@ -156,7 +156,7 @@ class Simulation(mesa.Model):
 
             # Create snapshots
             self.sim_history.append(self.get_sim_snapshot(trades_before=trades_before))
-            self.get_agents_snapshot()  # appends individual snapshots to each agent
+            self.get_traders_snapshot()  # appends individual snapshots to each trader
         
             self.timestamp += 1
 
@@ -179,7 +179,7 @@ class Simulation(mesa.Model):
         return sim_snap
 
         
-    def get_agent_snapshot(self, agent: Trader) -> AgentSnapshot:
+    def get_trader_snapshot(self, trader: Trader) -> TraderSnapshot:
         
         # Get appropriate price
         best_bid = self.book.biggest_bid()
@@ -196,20 +196,20 @@ class Simulation(mesa.Model):
         else:
             price = self.initial_price
 
-        wealth = agent.current_cash + agent.current_position * price
-        pnl = wealth - (agent.initial_cash + agent.initial_position * self.initial_price)
+        wealth = trader.current_cash + trader.current_position * price
+        pnl = wealth - (trader.initial_cash + trader.initial_position * self.initial_price)
 
-        return AgentSnapshot(
+        return TraderSnapshot(
                     timestamp=self.timestamp,
-                    current_cash=agent.current_cash,
-                    current_position=agent.current_position,
-                    effective_cash=agent.effective_cash,
-                    effective_position=agent.effective_position,
+                    current_cash=trader.current_cash,
+                    current_position=trader.current_position,
+                    effective_cash=trader.effective_cash,
+                    effective_position=trader.effective_position,
                     wealth=wealth,
                     pnl=pnl,
                 )
 
-    def get_agents_snapshot(self) -> None:
-        for id in self.traders:
-            agent = self.traders[id]
-            agent.snapshots.append(self.get_agent_snapshot(agent))
+    def get_traders_snapshot(self) -> None:
+        for trader_id in self.traders:
+            trader = self.traders[trader_id]
+            trader.snapshots.append(self.get_trader_snapshot(trader))

@@ -8,7 +8,7 @@ def test_bid_partially_fills_resting_ask():
 
     resting_ask = Order(
         order_id=1,
-        agent_id=10,
+        trader_id=10,
         side=Side.ASK,
         ord_type=OrdType.LIMIT,
         quantity=10,
@@ -17,7 +17,7 @@ def test_bid_partially_fills_resting_ask():
 
     incoming_bid = Order(
         order_id=2,
-        agent_id=20,
+        trader_id=20,
         side=Side.BID,
         ord_type=OrdType.LIMIT,
         quantity=4,

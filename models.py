@@ -22,7 +22,7 @@ class Order:
 
     creation_time: int | None = None
     price: int | None = None
-    agent_id: int | None = None
+    trader_id: int | None = None
     stock_id: int | None = None
 
     remaining_qty: int = field(init=False)
@@ -39,8 +39,8 @@ class Trade:
     sell_order_id: int
     event_number: int
     timestamp: int | None = None
-    buy_agent_id: int | None = None
-    sell_agent_id: int | None = None
+    buyer_trader_id: int | None = None
+    seller_trader_id: int | None = None
 
 
 @dataclass
@@ -72,7 +72,7 @@ class SimulationSnapshot:
 
 
 @dataclass
-class AgentSnapshot:
+class TraderSnapshot:
     timestamp: int
     current_cash: int
     current_position: int

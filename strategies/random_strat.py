@@ -1,7 +1,7 @@
 from .strategies import Strategy
 from models import Request, ReqType, Order, Side, OrdType
 from order_book import OrderBook
-from agents import Trader
+from traders import Trader
 
 import random
 
@@ -49,24 +49,24 @@ class Random(Strategy):
 
 
 
-    def decide(self, agent: Trader, book: OrderBook, timestamp: int) -> Request | None:
+    def decide(self, trader: Trader, book: OrderBook, timestamp: int) -> Request | None:
         '''
         Chooses a float in [0, 1], then based on the assigned probabilities we either attempt to buy or sell
         Same for market order'''
         cancel = self.rng.random() # cancel checker.
         if cancel < self.cancel_prob:
             # choose a random order to cancel out of the open orders?
-            a = len(agent.open_asks)
-            b = len(agent.open_bids)
+            a = len(trader.open_asks)
+            b = len(trader.open_bids)
             if a + b == 0:
                 return None
             
             n = self.rng.randint(0, a+b-1)
             if n >= a:
                 n -= a
-                return Request(req_type=ReqType.CANCEL, order=agent.open_bids[n])
+                return Request(req_type=ReqType.CANCEL, order=trader.open_bids[n])
             else:
-                return Request(req_type=ReqType.CANCEL, order=agent.open_asks[n])
+                return Request(req_type=ReqType.CANCEL, order=trader.open_asks[n])
 
 
 
@@ -84,7 +84,7 @@ class Random(Strategy):
                 price = max(1, self.reference_price + deviation)
             else:
                 price = max(1, best_bid + deviation)
-            quantity = min(agent.effective_cash // price, desired_quantity) 
+            quantity = min(trader.effective_cash // price, desired_quantity)
         elif action < self.buy_prob + self.sell_prob: # attempt to sell
             side = Side.ASK
             best_ask = book.smallest_ask()
@@ -92,7 +92,7 @@ class Random(Strategy):
                 price = max(1, self.reference_price + deviation)
             else:
                 price = max(1, best_ask + deviation)
-            quantity = min(agent.effective_position, desired_quantity) # depends on current position
+            quantity = min(trader.effective_position, desired_quantity) # depends on current position
         else:
             return None
 
@@ -106,7 +106,7 @@ class Random(Strategy):
                     quantity=quantity,
                     side=side,
                     ord_type=ord_type,
-                    agent_id=agent.agent_id,
+                    trader_id=trader.trader_id,
                     price=price,
                 )
 

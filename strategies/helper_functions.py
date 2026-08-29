@@ -1,13 +1,13 @@
 import random
 
-from agents import Trader
+from traders import Trader
 from models import Order, OrdType, Request, ReqType, Side
 
 
 def cancellation_request(
     ask: float,
     bid: float,
-    agent: Trader,
+    trader: Trader,
     timestamp: int,
     time_req: int,
     tolerance: float,
@@ -17,7 +17,7 @@ def cancellation_request(
 
     eligible_asks = (
         order
-        for order in agent.open_asks
+        for order in trader.open_asks
         if order.creation_time is not None
         and order.price is not None
         and timestamp >= order.creation_time + time_req
@@ -31,7 +31,7 @@ def cancellation_request(
 
     eligible_bids = (
         order
-        for order in agent.open_bids
+        for order in trader.open_bids
         if order.creation_time is not None
         and order.price is not None
         and timestamp >= order.creation_time + time_req
@@ -62,7 +62,7 @@ def cancellation_request(
 def placement_request(
     ask: float,
     bid: float,
-    agent: Trader,
+    trader: Trader,
     quantity: int,
     rng: random.Random,
     side: Side | None = None,
@@ -74,8 +74,8 @@ def placement_request(
     applying their own inventory policy.
     """
 
-    has_ask = any(order.price == ask for order in agent.open_asks)
-    has_bid = any(order.price == bid for order in agent.open_bids)
+    has_ask = any(order.price == ask for order in trader.open_asks)
+    has_bid = any(order.price == bid for order in trader.open_bids)
 
     if side is None:
         if not has_ask and not has_bid:
@@ -91,12 +91,12 @@ def placement_request(
 
     if side == Side.ASK:
         price = ask
-        order_quantity = min(agent.effective_position, quantity)
+        order_quantity = min(trader.effective_position, quantity)
     else:
         if bid <= 0:
             return None
         price = bid
-        order_quantity = min(int(agent.effective_cash // bid), quantity)
+        order_quantity = min(int(trader.effective_cash // bid), quantity)
 
     if order_quantity <= 0:
         return None
@@ -107,7 +107,7 @@ def placement_request(
             quantity=order_quantity,
             side=side,
             ord_type=OrdType.LIMIT,
-            agent_id=agent.agent_id,
+            trader_id=trader.trader_id,
             price=price,
         ),
     )

@@ -1,7 +1,7 @@
 from .strategies import Strategy
 from .helper_functions import cancellation_request, placement_request
 from order_book import OrderBook
-from agents import Trader
+from traders import Trader
 from models import Request
 
 import random 
@@ -25,7 +25,7 @@ class NaiveMM(Strategy):
         self.rng = random.Random(seed)
 
 
-    def decide(self, agent: Trader, book: OrderBook, timestamp: int) -> Request | None:
+    def decide(self, trader: Trader, book: OrderBook, timestamp: int) -> Request | None:
         # check if the market has liquidity
         if book.mid_price is None:
             return None
@@ -37,7 +37,7 @@ class NaiveMM(Strategy):
         cancel_request = cancellation_request(
             ask=ask,
             bid=bid,
-            agent=agent,
+            trader=trader,
             timestamp=timestamp,
             time_req=self.time_req,
             tolerance=self.tolerance,
@@ -50,7 +50,7 @@ class NaiveMM(Strategy):
         return placement_request(
             ask=ask,
             bid=bid,
-            agent=agent,
+            trader=trader,
             quantity=self.quantity,
             rng=self.rng,
         )

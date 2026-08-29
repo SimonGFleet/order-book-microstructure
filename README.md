@@ -1,14 +1,14 @@
 # Order Book
 
-A Python agent based order book market microstructure simulator. Experiment creating agents with different strategies and observe how the market behaviour changes.
+A Python agent-based order book market microstructure simulator. Experiment with traders using different strategies and observe how market behaviour changes.
 
 ## Features
 
 - Limit and market orders
 - Cancellation of orders
-- Agent creation with strategies
-- Run simulations for any number of time steps with specified agents
-- Get statistics for the simulation as a whole (and each individual agent soon)
+- Trader creation with strategies
+- Run simulations for any number of time steps with specified traders
+- Get statistics for the simulation as a whole (and each individual trader soon)
 - Tests cover accounting logic and asset conservation.
 
 ## Setup
@@ -25,9 +25,9 @@ python -m pip install -r requirements.txt
 ```
 ## How it works
 
-Each step of the simulation calls get requests on each agent it has. 
-The agent calls its strategy to decide what to do, 
-The strategy receives the agent object (their wealth and current open orders) and the state of the order book.
+Each step of the simulation requests an action from each trader.
+The trader calls its strategy to decide what to do.
+The strategy receives the trader object (including wealth and open orders) and the state of the order book.
 The strategy returns either None, or a Request object - this holds an action (cancel/place) and an order.
 We then shuffle the requests and apply them - shuffle is currently just random, no defined latency.
 
@@ -42,7 +42,7 @@ Strategies base decisions on effective cash and effective position, such that th
 |---|---|
 | `order_book.py` | Orders, trades, price levels, matching, and cancellation |
 | `simulation.py` | Simulation loop, settlement, and market statistics |
-| `agents.py` | Agent state and strategy integration |
+| `traders.py` | Trader state and strategy integration |
 | `strategies.py` | Trading-strategy implementations |
 | `models.py` | Stores common objects for other files to import |
 | `example.ipynb` | Interactive experimentation |

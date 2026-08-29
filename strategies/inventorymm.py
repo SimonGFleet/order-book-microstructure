@@ -1,7 +1,7 @@
 from .strategies import Strategy
 from .helper_functions import cancellation_request, placement_request
 from order_book import OrderBook
-from agents import Trader
+from traders import Trader
 from models import Order, Request, ReqType, OrdType, Side
 
 import random 
@@ -30,7 +30,7 @@ class InventoryMM(Strategy):
         self.quantity = quantity
         self.rng = random.Random(seed)
 
-    def decide(self, agent: Trader, book: OrderBook, timestamp: int) -> Request | None:
+    def decide(self, trader: Trader, book: OrderBook, timestamp: int) -> Request | None:
         if book.mid_price is None:
             return None
 
@@ -40,7 +40,7 @@ class InventoryMM(Strategy):
         cancel_request = cancellation_request(
             ask=ask,
             bid=bid,
-            agent=agent,
+            trader=trader,
             timestamp=timestamp,
             time_req=self.time_req,
             tolerance=self.tolerance,
@@ -54,8 +54,8 @@ class InventoryMM(Strategy):
         side = None
 
         
-        stocks = agent.current_position * book.mid_price
-        wealth = stocks + agent.current_cash
+        stocks = trader.current_position * book.mid_price
+        wealth = stocks + trader.current_cash
         ratio = stocks / wealth
         if abs(ratio - self.target_ratio) > self.ratio_error:
             if ratio - self.target_ratio > 0:   # too much in stocks
@@ -67,7 +67,7 @@ class InventoryMM(Strategy):
         return placement_request(
             ask=ask,
             bid=bid,
-            agent=agent,
+            trader=trader,
             quantity=self.quantity,
             rng=self.rng,
             side=side

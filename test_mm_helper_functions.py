@@ -3,24 +3,24 @@ import mesa
 
 from models import ReqType, Side
 from strategies.helper_functions import cancellation_request, placement_request
-from testing_starters import def_agent, def_ask, def_bid
+from testing_starters import def_trader, def_ask, def_bid
 
 
 def test_cancellation_request_selects_worst_stale_order():
-    agent = def_agent(mesa.Model(), 1)
+    trader = def_trader(mesa.Model(), 1)
     near_ask = def_ask(1, price=103)
     far_ask = def_ask(1, price=110)
     bid = def_bid(1, price=98)
     near_ask.creation_time = 0
     far_ask.creation_time = 0
     bid.creation_time = 0
-    agent.open_asks = [near_ask, far_ask]
-    agent.open_bids = [bid]
+    trader.open_asks = [near_ask, far_ask]
+    trader.open_bids = [bid]
 
     request = cancellation_request(
         ask=102,
         bid=98,
-        agent=agent,
+        trader=trader,
         timestamp=10,
         time_req=5,
         tolerance=2,
@@ -33,15 +33,15 @@ def test_cancellation_request_selects_worst_stale_order():
 
 
 def test_cancellation_request_ignores_recent_orders():
-    agent = def_agent(mesa.Model(), 1)
+    trader = def_trader(mesa.Model(), 1)
     ask = def_ask(1, price=110)
     ask.creation_time = 8
-    agent.open_asks = [ask]
+    trader.open_asks = [ask]
 
     request = cancellation_request(
         ask=102,
         bid=98,
-        agent=agent,
+        trader=trader,
         timestamp=10,
         time_req=5,
         tolerance=2,
@@ -52,15 +52,15 @@ def test_cancellation_request_ignores_recent_orders():
 
 
 def test_cancellation_request_keeps_orders_within_tolerance():
-    agent = def_agent(mesa.Model(), 1)
+    trader = def_trader(mesa.Model(), 1)
     ask = def_ask(1, price=104)
     ask.creation_time = 0
-    agent.open_asks = [ask]
+    trader.open_asks = [ask]
 
     request = cancellation_request(
         ask=102,
         bid=98,
-        agent=agent,
+        trader=trader,
         timestamp=10,
         time_req=5,
         tolerance=2,
@@ -71,14 +71,14 @@ def test_cancellation_request_keeps_orders_within_tolerance():
 
 
 def test_placement_request_places_the_missing_bid():
-    agent = def_agent(mesa.Model(), 1)
+    trader = def_trader(mesa.Model(), 1)
     existing_ask = def_ask(1, price=102)
-    agent.open_asks = [existing_ask]
+    trader.open_asks = [existing_ask]
 
     request = placement_request(
         ask=102,
         bid=98,
-        agent=agent,
+        trader=trader,
         quantity=5,
         rng=random.Random(1),
     )
@@ -91,12 +91,12 @@ def test_placement_request_places_the_missing_bid():
 
 
 def test_placement_request_respects_available_inventory():
-    agent = def_agent(mesa.Model(), 1, initial_position=3)
+    trader = def_trader(mesa.Model(), 1, initial_position=3)
 
     request = placement_request(
         ask=102,
         bid=98,
-        agent=agent,
+        trader=trader,
         quantity=5,
         rng=random.Random(1),
         side=Side.ASK,
@@ -108,12 +108,12 @@ def test_placement_request_respects_available_inventory():
 
 
 def test_placement_request_respects_available_cash():
-    agent = def_agent(mesa.Model(), 1, initial_cash=250)
+    trader = def_trader(mesa.Model(), 1, initial_cash=250)
 
     request = placement_request(
         ask=102,
         bid=100,
-        agent=agent,
+        trader=trader,
         quantity=5,
         rng=random.Random(1),
         side=Side.BID,
