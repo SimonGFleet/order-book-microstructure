@@ -58,6 +58,7 @@ class ReqType(Enum):
 class Request:
     req_type: ReqType
     order: Order
+    arrival_time: int = 0
 
 
 @dataclass

@@ -9,10 +9,9 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from order_book import OrderBook
 from models import Order, Request, TraderSnapshot
+import random
 
 import mesa
-
-
 
 
 @dataclass(eq=False)
@@ -24,6 +23,7 @@ class Trader(mesa.Agent):
     strategy: Strategy
     latency: int = 0
     latency_deviation: int = 0
+    next_request_time: int = 0
 
     open_bids: list[Order] = field(default_factory=list)
     open_asks: list[Order] = field(default_factory=list)
@@ -46,6 +46,13 @@ class Trader(mesa.Agent):
         # want this to call the strategy and get the result,
         # then the simulation will call this trader.decide_action and get the request / None that is made.    
         request: Request | None = self.strategy.decide(self, book, timestep) # this should call the strategy
+
+        latency: int = min(0, self.latency + 
+                      random.randint(-self.latency_deviation, self.latency_deviation)) # if deviation is big, latency could go below zero meaning it would have a knock on effect
+        if request is not None:
+            request.arrival_time = timestep + latency
+
+        self.next_request_time += latency
 
         return request
 

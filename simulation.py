@@ -6,6 +6,7 @@ from collections import deque
 import random
 from matplotlib import pyplot as plt
 import mesa
+import heapq
 
 
 class Simulation(mesa.Model):
@@ -15,10 +16,14 @@ class Simulation(mesa.Model):
         self.traders: dict[int, Trader] = {} # key = trader_id
         self.requests: deque[Request] = deque() # queue of orders waiting to be applied
         self.sim_history: list[SimulationSnapshot] = []
-
+        
         self.order_count = 0
         self.timestamp = 0
         self.initial_price = initial_price
+
+
+        self.req2 = []
+        heapq.heapify(self.req2)
 
 
 
@@ -27,16 +32,20 @@ class Simulation(mesa.Model):
         temp_requests: list[Request] = []
         
         for trader in self.traders.values():
-            decision = trader.decide_action(self.book, self.timestamp)
+            if trader.next_request_time <= self.timestamp:
+                decision = trader.decide_action(self.book, self.timestamp)
+            else:
+                continue
 
-            if decision is not None:
+            if decision is None:
+                continue
 
-                if decision.req_type == ReqType.PLACE:          # add order_id
-                    decision.order.order_id = self.order_count
-                    decision.order.creation_time = self.timestamp
-                    self.order_count += 1
-                
-                temp_requests.append(decision)  # add order to current requests
+            if decision.req_type == ReqType.PLACE:          # add order_id
+                decision.order.order_id = self.order_count
+                decision.order.creation_time = self.timestamp
+                self.order_count += 1
+            
+            temp_requests.append(decision)  # add order to current requests
 
         random.shuffle(temp_requests)
         self.requests += temp_requests
