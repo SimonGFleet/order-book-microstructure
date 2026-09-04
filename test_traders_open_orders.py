@@ -30,7 +30,7 @@ def test_trader_starts_with_no_open_orders():
     assert len(sim.requests) == len(sim.traders[1].open_asks)
     assert len(sim.requests) == len(sim.traders[1].open_bids)
 
-    sim.apply_request()
+    sim.apply_requests()
 
     assert len(sim.requests) == len(sim.traders[1].open_asks)
     assert len(sim.requests) == len(sim.traders[1].open_bids)
@@ -92,15 +92,8 @@ def test_traders_gain_open_orders():
     assert len(sim.traders[2].open_asks) == 0
     assert len(sim.traders[2].open_bids) == 0
 
-    sim.apply_request()
+    sim.apply_requests()
 
-    assert len(sim.requests) == 1
-    assert len(sim.traders[1].open_asks) == 0
-    assert len(sim.traders[1].open_bids) == 1
-    assert len(sim.traders[2].open_asks) == 0
-    assert len(sim.traders[2].open_bids) == 0
-
-    sim.apply_request()
 
     assert len(sim.requests) == 0
     assert len(sim.traders[1].open_asks) == 0
@@ -168,18 +161,18 @@ def test_completing_orders():
     )
     sim.requests.append(req1)
     sim.requests.append(req2)
-    sim.requests.append(req3)
+    
 
-    sim.apply_request()
-    sim.apply_request()
-
-    assert len(sim.requests) == 1
+    sim.apply_requests()
+    print(sim.requests)
+    assert len(sim.requests) == 0
     assert len(sim.traders[1].open_asks) == 0
     assert len(sim.traders[1].open_bids) == 2
     assert len(sim.traders[2].open_asks) == 0
     assert len(sim.traders[2].open_bids) == 0
 
-    sim.apply_request()
+    sim.requests.append(req3)
+    sim.apply_requests()
     assert len(sim.requests) == 0
     assert len(sim.traders[1].open_asks) == 0
     assert len(sim.traders[1].open_bids) == 1
@@ -217,11 +210,12 @@ def test_cancelling_orders():
         order=ord1,
     )
     sim.requests.append(req1)
-    sim.requests.append(req2)
-    sim.apply_request()
+    
+    sim.apply_requests()
     assert len(sim.traders[1].open_bids) == 1
     assert not ord1.cancelled
-    sim.apply_request()
+    sim.requests.append(req2)
+    sim.apply_requests()
     assert len(sim.traders[1].open_bids) == 0
     assert ord1.cancelled
 
@@ -271,13 +265,11 @@ def test_market_order_doesnt_become_open():
         order=ord2,
     )
     sim.requests.append(req1)
+    sim.apply_requests()
+
     sim.requests.append(req2)
 
-    sim.apply_request()
-    assert len(sim.traders[1].open_asks) == 1
-    assert len(sim.traders[1].open_bids) == 0
-
-    sim.apply_request()
+    sim.apply_requests()
     assert len(sim.traders[1].open_asks) == 0
     assert len(sim.traders[1].open_bids) == 0
     assert len(sim.traders[2].open_asks) == 0

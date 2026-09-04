@@ -14,7 +14,7 @@ class Simulation(mesa.Model):
         super().__init__(seed=seed)
         self.book: OrderBook = OrderBook()
         self.traders: dict[int, Trader] = {} # key = trader_id
-        self.requests: deque[Request] = deque() # queue of orders waiting to be applied
+        self.requests: list[Request] = [] # heap of requests waiting to be applied with their arrival time as the differentiator
         self.sim_history: list[SimulationSnapshot] = []
         
         self.order_count = 0
@@ -22,14 +22,14 @@ class Simulation(mesa.Model):
         self.initial_price = initial_price
 
 
-        self.req2 = []
-        heapq.heapify(self.req2)
 
 
 
 
     def get_requests(self) -> None:
-        temp_requests: list[Request] = []
+        '''Goes through each trader, checks when they can next make a request
+        if they can, they are asked for a decision, 
+        if not none, its pushed to the requests heap in the form: (arrival_time, request)'''
         
         for trader in self.traders.values():
             if trader.next_request_time <= self.timestamp:
@@ -45,21 +45,27 @@ class Simulation(mesa.Model):
                 decision.order.creation_time = self.timestamp
                 self.order_count += 1
             
-            temp_requests.append(decision)  # add order to current requests
+            heapq.heappush(self.requests, decision)  # add request
 
-        random.shuffle(temp_requests)
-        self.requests += temp_requests
+
+    def apply_requests(self) -> None:
+        '''Pops from requests until the lowest arrival time is after the current timestamp
+        saves these to a temporary array, shuffles, then applies one at a time.
+        Shuffling the requests now means it is no longer deterministic if multiple orders are arriving at the same time.'''
+        reqs_to_apply: list[Request] = []
+
+        while self.requests and self.requests[0].arrival_time <= self.timestamp:
+            reqs_to_apply.append(heapq.heappop(self.requests))   # the request is the second part
+
+        self.random.shuffle(reqs_to_apply)
+        for request in reqs_to_apply:
+            self.apply_request(request)
 
     
-    
-    def apply_request(self) -> None:
-        # might be apply just one order at a time, then the timestep increases
-        # we only do one order at a time so that traders can submit or cancel orders at each time step
-        # they can see what the market looks like
-        if not self.requests: 
-            return
+    def apply_request(self, req: Request) -> None:
+        '''Takes in a specific request, will always be Request object, and will have arrival_time <= sim timestamp
+        Processes the request and updates the traders attributes'''
 
-        req: Request = self.requests.popleft()
         if req.req_type == ReqType.CANCEL: # cancel: needs to remove the order from the book, then change the effective stats.
             order: Order = self.book.cancel_order(req.order)
             if order.cancelled:
@@ -156,10 +162,9 @@ class Simulation(mesa.Model):
             # update mid_price
             self.book.get_mid_price()
 
-            # at each step we get requests, then apply a request
+            # at each step we get requests, then apply the appropriately timed ones
             self.get_requests()
-            while self.requests:
-                self.apply_request()
+            self.apply_requests()
 
             
 

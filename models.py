@@ -60,6 +60,9 @@ class Request:
     order: Order
     arrival_time: int = 0
 
+    def __lt__(self, other: Request) -> bool:
+        return self.arrival_time < other.arrival_time
+
 
 @dataclass
 class SimulationSnapshot:

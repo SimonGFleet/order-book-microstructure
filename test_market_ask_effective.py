@@ -17,10 +17,10 @@ def test_market_ask_updates_effective_position():
     )
 
     sim.requests.append(place(bid))
-    sim.apply_request()
+    sim.apply_requests()
 
     sim.requests.append(place(market_ask))
-    sim.apply_request()
+    sim.apply_requests()
 
     assert sim.traders[1].current_position == 5
     assert sim.traders[1].effective_position == 5

@@ -7,7 +7,7 @@ from strategies import Strategy
 def test_empty_requests():
     sim: Simulation = Simulation()
 
-    sim.apply_request()
+    sim.apply_requests()
 
     assert len(sim.requests) == 0
     assert len(sim.book.trades) == 0
@@ -56,8 +56,7 @@ def test_place_non_crossing_order():
             )
         )
     )
-    sim.apply_request() # this should just place the order, not make any trades
-    sim.apply_request() # this should do similar
+    sim.apply_requests() # this should just place the order, not make any trades
 
     # the traders remain identical to their creation
     assert sim.traders[1].current_cash == 1000
@@ -113,8 +112,7 @@ def test_place_crossing_order():
             )
         )
     )
-    sim.apply_request() # this should just place the order, not make any trades
-    sim.apply_request() # this should do similar
+    sim.apply_requests() # this should just place the order, not make any trades
 
     # no requests left - should be one completed trade
     assert len(sim.requests) == 0
@@ -151,6 +149,7 @@ def test_cancellation_request():
             order=ord1,
         )
     )
+    sim.apply_requests()
 
     sim.requests.append(
         Request(
@@ -159,10 +158,8 @@ def test_cancellation_request():
         )
     )
 
-    sim.apply_request()
-    assert len(sim.requests) == 1
+    sim.apply_requests()
 
-    sim.apply_request()
     assert len(sim.requests) == 0
 
     assert sim.book.asks == {}

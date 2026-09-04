@@ -51,10 +51,7 @@ def test_limit_order_affects_effective_cash():
     sim.get_requests()
     assert len(sim.requests) == 2
 
-    sim.apply_request()
-    assert len(sim.requests) == 1
-
-    sim.apply_request()
+    sim.apply_requests()
     assert len(sim.requests) == 0
 
     assert sim.traders[1].effective_cash == 900
@@ -107,7 +104,7 @@ def test_cancelling_request_returns_effective_cash():
     placed_order = sim.requests[0].order
     assert len(sim.requests) == 1
 
-    sim.apply_request()
+    sim.apply_requests()
 
     assert len(sim.requests) == 0
     assert sim.traders[1].current_cash == 1000
@@ -116,7 +113,7 @@ def test_cancelling_request_returns_effective_cash():
     sim.requests.append(Request(ReqType.CANCEL, placed_order))
 
 
-    sim.apply_request()
+    sim.apply_requests()
     assert len(sim.requests) == 0
 
     assert sim.traders[1].current_cash == 1000
@@ -142,8 +139,7 @@ def test_limit_bid_executing_for_less_than_price():
     sim.requests.append(req2)
 
 
-    sim.apply_request()
-    sim.apply_request()
+    sim.apply_requests()
 
     assert sim.traders[1].current_position == 0
     assert sim.traders[1].effective_position == 0
@@ -164,9 +160,9 @@ def test_crossing_limit_orders():
     req1 = place(ord1)
     req2 = place(ord2)
     sim.requests.append(req1)
+    sim.apply_requests()
     sim.requests.append(req2)
-    sim.apply_request()
-    sim.apply_request()
+    sim.apply_requests()
 
     assert trader1.current_position == 0
     assert trader1.effective_position == 0

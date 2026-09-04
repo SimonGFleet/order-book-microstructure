@@ -24,10 +24,10 @@ def test_doesnt_over_spend():
     req2 = place(ord2)
 
     sim.requests.append(req1)
-    sim.apply_request()
+    sim.apply_requests()
 
     sim.requests.append(req2)
-    sim.apply_request()
+    sim.apply_requests()
 
     # expecting: trader2 should have 0 cash, trader 1 should have 1500, trader 2 should have 15 position, trader 2 should have 5
     assert sim.traders[2].current_cash == 0
@@ -60,11 +60,11 @@ def test_over_spending_multiple_prices():
 
     sim.requests.append(req1)
     sim.requests.append(req2)
-    sim.requests.append(req3)
+    sim.apply_requests()
 
-    sim.apply_request()
-    sim.apply_request()
-    sim.apply_request()
+    # Due to shuffling in apply_requests() the market order needs to come in last.
+    sim.requests.append(req3)
+    sim.apply_requests()
 
     assert sim.traders[3].current_position == 16
     assert sim.traders[3].current_cash == 100

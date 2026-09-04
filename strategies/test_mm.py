@@ -33,9 +33,7 @@ def test_cancellation_request_tolerance_check():
     sim.requests.append(req2)
     sim.requests.append(req3)
 
-    sim.apply_request()
-    sim.apply_request()
-    sim.apply_request()
+    sim.apply_requests()
 
     assert sim.traders[2].open_asks == [bad_ask]
 
@@ -77,7 +75,7 @@ def test_cancellation_request_tolerance_check():
 
     sim.requests.append(req5)
 
-    sim.apply_request()
+    sim.apply_requests()
 
     assert sim.traders[2].open_asks == []
 
@@ -112,10 +110,7 @@ def test_cancellation_request_chooses_correct_order():
     sim.requests.append(req3)
     sim.requests.append(req4)
 
-    sim.apply_request()
-    sim.apply_request()
-    sim.apply_request()
-    sim.apply_request()
+    sim.apply_requests()
 
     assert sim.traders[2].open_asks == [bad_ask]
     assert sim.traders[2].open_bids == [bad_bid]
@@ -144,7 +139,7 @@ def test_cancellation_request_chooses_correct_order():
     assert req4.order == bad_bid
 
     sim.requests.append(req4)
-    sim.apply_request()
+    sim.apply_requests()
 
     assert sim.traders[2].open_bids == []
     assert sim.traders[2].open_asks == [bad_ask]
@@ -174,9 +169,7 @@ def test_cancellation_request_young_order():
     sim.requests.append(req2)
     sim.requests.append(req3)
 
-    sim.apply_request()
-    sim.apply_request()
-    sim.apply_request()
+    sim.apply_requests()
 
     assert sim.traders[2].open_asks == [bad_ask]
 
