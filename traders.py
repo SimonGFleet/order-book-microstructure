@@ -47,12 +47,11 @@ class Trader(mesa.Agent):
         # then the simulation will call this trader.decide_action and get the request / None that is made.    
         request: Request | None = self.strategy.decide(self, book, timestep) # this should call the strategy
 
-        latency: int = min(0, self.latency + 
+        latency: int = max(0, self.latency + 
                       random.randint(-self.latency_deviation, self.latency_deviation)) # if deviation is big, latency could go below zero meaning it would have a knock on effect
         if request is not None:
             request.arrival_time = timestep + latency
-
-        self.next_request_time += latency
+        self.next_request_time += latency + 1
 
         return request
 
