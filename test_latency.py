@@ -30,12 +30,13 @@ def test_frequency_of_order():
     sim.run_sim(20)
     assert len(sim.traders[1].open_bids) == 1
     sim.run_sim(20)
-    assert len(sim.traders[1].open_bids) == 3
-    sim.run_sim(12) 
+    assert len(sim.traders[1].open_bids) == 2
+    sim.run_sim(10) 
     assert len(sim.traders[1].open_bids) == 3   # whilst timestamp == next_request_time we have the timestamp being incremented after the 
+    sim.run_sim(5)
+    assert len(sim.traders[1].open_bids) == 3
     sim.run_sim(1)
     assert len(sim.traders[1].open_bids) == 4
-
 
 
 

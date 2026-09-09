@@ -29,7 +29,7 @@ def test_order_ids_are_generated():
     assert sim.order_count == 1
 
     ord1: Request = sim.requests[0]
-
+    sim.timestamp += 1
     sim.get_requests()
     assert sim.order_count == 2
 

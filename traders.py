@@ -53,6 +53,8 @@ class Trader(mesa.Agent):
             request.arrival_time = timestep + latency
         self.next_request_time += latency + 1
 
+        
+
         return request
 
     def step(self) -> None:

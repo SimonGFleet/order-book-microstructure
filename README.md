@@ -13,7 +13,7 @@ A Python agent-based order book market microstructure simulator. Experiment with
 
 ## Setup
 
-Requires Python 3.10 or newer.
+Requires Python 3.14 or newer.
 
 ```bash
 git clone https://github.com/SimonGFleet/order-book-microstructure.git
@@ -25,16 +25,14 @@ python -m pip install -r requirements.txt
 ```
 ## How it works
 
-Each step of the simulation requests an action from each trader.
-The trader calls its strategy to decide what to do.
-The strategy receives the trader object (including wealth and open orders) and the state of the order book.
-The strategy returns either None, or a Request object - this holds an action (cancel/place) and an order.
-We then shuffle the requests and apply them - shuffle is currently just random, no defined latency.
+Each simulation timestep asks eligible traders for an action.
+Each trader’s strategy returns either a request to place or cancel an order, or no action.
 
-Applying each request:
-Incoming orders are matched against the best available price, we use a queue to ensure FIFO for orders of the same price in the book. Uncompleted limit orders are then added to the book.
+Requests enter a priority queue with an arrival time determined by the trader’s latency and latency deviation. At each timestep, requests that are due are collected, shuffled, and processed.
 
-Strategies base decisions on effective cash and effective position, such that they are unable to overspend.
+A trader becomes eligible to decide again on the timestep after its request’s scheduled arrival. This lets its next decision use the book state after the previous request was processed. With zero latency, a trader can decide once per timestep.
+
+New orders receive a sequential ID and creation timestamp when their requests are generated. After processing requests, the simulation records market and trader snapshots, then advances the timestamp.
 
 ## Project structure
 
@@ -43,7 +41,7 @@ Strategies base decisions on effective cash and effective position, such that th
 | `order_book.py` | Orders, trades, price levels, matching, and cancellation |
 | `simulation.py` | Simulation loop, settlement, and market statistics |
 | `traders.py` | Trader state and strategy integration |
-| `strategies.py` | Trading-strategy implementations |
+| `strategies` | Folder to hold strategies for traders |
 | `models.py` | Stores common objects for other files to import |
 | `example.ipynb` | Interactive experimentation |
 | `test_*.py` | Automated tests |
