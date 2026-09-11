@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import deque
+import heapq
 from operator import ge, le
 from models import MatchResult, Order, OrdType, Side, Trade
 
@@ -11,10 +12,10 @@ class OrderBook:
     def __init__(self):
         self.bids: dict[int, deque[Order]] = {} 
         self.asks: dict[int, deque[Order]] = {} # we should have the values of keys being queues
-                # could also store these as heaps? how do we get the minimum value?
-                # heap then has O(1) look up for min instead of O(n) - not currently essential, dont know how this could change.
-                # hash map has O(1) look up for any specific value - when are we looking up a specfic value and not just the minimum?
-                    # during order cancellations and when we add orders
+
+        self.bids_index = [] # this should be max heap so add negative values
+        self.asks_index = [] # intended as heap to give efficient best price lookup
+
 
         self.trades: list[Trade] = []
         # this is incremented after each trade
@@ -37,6 +38,8 @@ class OrderBook:
                 self.bids[order.price].append(order)
             else:
                 self.bids[order.price] = deque([order])
+                heapq.heappush(self.bids_index, -order.price) # want a max heap.
+                
 
 
         elif order.side == Side.ASK:
@@ -44,16 +47,15 @@ class OrderBook:
                 self.asks[order.price].append(order)
             else:
                 self.asks[order.price] = deque([order])
+                heapq.heappush(self.asks_index, order.price)
         else:
              raise ValueError("order must be an ask or bid")
 
     def biggest_bid(self):
-        '''returns integer'''
-        return max(self.bids) if self.bids else None
+        return - self.bids_index[0] if self.bids_index else None 
 
     def smallest_ask(self):
-            '''returns integer'''
-            return min(self.asks) if self.asks else None
+        return self.asks_index[0] if self.asks_index else None
 
     # Need function to complete transactions.
     def match_order(self, order: Order, *, budget: int | None = None) -> MatchResult:
@@ -69,9 +71,11 @@ class OrderBook:
         if order.side == Side.BID:
             crosses = le
             opposite_book = self.asks
+            index = self.asks_index
         elif order.side == Side.ASK:
             crosses = ge                # ge(a, b) == a >= b
             opposite_book = self.bids
+            index = self.bids_index
         else: 
              raise ValueError("must be ask or bid")
 
@@ -138,6 +142,10 @@ class OrderBook:
                 result.completed_orders.append(opposite_book[best_price].popleft())
                 if not opposite_book[best_price]:
                     opposite_book.pop(best_price)
+                    heapq.heappop(index) # remove the index too. 
+
+
+
         if result.trades:
             self.event_number += 1 # only change this at the end of the match so the order is processed 'instantly'
         return result
@@ -150,8 +158,12 @@ class OrderBook:
         # fetch correct book
         if order.side == Side.BID:
             book = self.bids
+            index = self.bids_index
+            multiplier = -1
         elif order.side == Side.ASK:
             book = self.asks
+            index = self.asks_index
+            multiplier = 1
         else:
             raise ValueError("Bad order")
         found = False
@@ -164,6 +176,9 @@ class OrderBook:
                     found = True
             if not book[order.price]:
                 book.pop(order.price)
+                # remove from index, currently doing long method
+                self.remove_price(index, multiplier * order.price)
+
         else:
             raise KeyError("No order at this price in the book")
         
@@ -175,4 +190,13 @@ class OrderBook:
     def get_mid_price(self) -> None:
         if self.biggest_bid() is not None and self.smallest_ask() is not None:
             self.mid_price = (self.smallest_ask() + self.biggest_bid()) / 2
+
+
+    def remove_price(self, heap, value):
+        index = heap.index(value)
+
+        heap[index] = heap[-1]
+        heap.pop()
+
+        heapq.heapify(heap)
         
