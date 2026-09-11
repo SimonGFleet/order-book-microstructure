@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .strategies import Strategy
 from .helper_functions import cancellation_request, placement_request
 from order_book import OrderBook

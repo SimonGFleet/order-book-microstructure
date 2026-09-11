@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import deque
 from operator import ge, le
 from models import MatchResult, Order, OrdType, Side, Trade

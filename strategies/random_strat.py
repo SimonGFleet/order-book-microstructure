@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .strategies import Strategy
 from models import Request, ReqType, Order, Side, OrdType
 from order_book import OrderBook
