@@ -4,14 +4,22 @@ from models import MatchResult, Order, OrdType, Request, ReqType, Side, Trade, S
 
 from collections import deque
 import random
+import hashlib
+import json
+import secrets
 from matplotlib import pyplot as plt
 import mesa
 import heapq
 
 
 class Simulation(mesa.Model):
-    def __init__(self, initial_price: int = 100, seed=None):
-        super().__init__(seed=seed)
+    def __init__(self, initial_price: int = 100, seed: int | None = None):
+        if seed is not None and (isinstance(seed, bool) or not isinstance(seed, int)):
+            raise TypeError("seed must be an integer or None")
+        self.seed = secrets.randbits(128) if seed is None else seed
+        self._random_streams: dict[tuple[str, int | None], random.Random] = {}
+        super().__init__(rng=self._derive_seed("request_ordering", None))
+        self._random_streams[("request_ordering", None)] = self.random
         self.book: OrderBook = OrderBook()
         self.traders: dict[int, Trader] = {} # key = trader_id
         self.requests: list[Request] = [] # heap of requests waiting to be applied with their arrival time as the differentiator
@@ -20,6 +28,19 @@ class Simulation(mesa.Model):
         self.order_count = 0
         self.timestamp = 0
         self.initial_price = initial_price
+
+    def _derive_seed(self, purpose: str, trader_id: int | None) -> int:
+        # Version the encoding: changing it changes every experiment's streams.
+        key = json.dumps(["order-book-rng-v1", self.seed, purpose, trader_id],
+                         separators=(",", ":")).encode("utf-8")
+        return int.from_bytes(hashlib.sha256(key).digest(), "big")
+
+    def get_rng(self, purpose: str, trader_id: int | None = None) -> random.Random:
+        """Return a persistent stream independent of other streams' creation/draw order."""
+        key = (purpose, trader_id)
+        if key not in self._random_streams:
+            self._random_streams[key] = random.Random(self._derive_seed(purpose, trader_id))
+        return self._random_streams[key]
 
 
 
@@ -51,7 +72,7 @@ class Simulation(mesa.Model):
     def apply_requests(self) -> None:
         '''Pops from requests until the lowest arrival time is after the current timestamp
         saves these to a temporary array, shuffles, then applies one at a time.
-        Shuffling the requests now means it is no longer deterministic if multiple orders are arriving at the same time.'''
+        Shuffling randomizes processing order reproducibly using the simulation seed.'''
         reqs_to_apply: list[Request] = []
 
         while self.requests and self.requests[0].arrival_time <= self.timestamp:

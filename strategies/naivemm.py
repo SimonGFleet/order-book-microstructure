@@ -6,7 +6,6 @@ from order_book import OrderBook
 from traders import Trader
 from models import Request
 
-import random 
 
 class NaiveMM(Strategy):
     '''This strategy does not care what its inventory looks like,
@@ -18,13 +17,11 @@ class NaiveMM(Strategy):
             time_req: int,
             tolerance: int,
             quantity: int,
-            seed: int | None = None,
             ):
         self.half_spread = half_spread
         self.time_req = time_req
         self.tolerance = tolerance
         self.quantity = quantity
-        self.rng = random.Random(seed)
 
 
     def decide(self, trader: Trader, book: OrderBook, timestamp: int) -> Request | None:
@@ -43,7 +40,7 @@ class NaiveMM(Strategy):
             timestamp=timestamp,
             time_req=self.time_req,
             tolerance=self.tolerance,
-            rng=self.rng,
+            rng=trader.strategy_rng,
         )
         if cancel_request is not None:
             return cancel_request
@@ -54,6 +51,6 @@ class NaiveMM(Strategy):
             bid=bid,
             trader=trader,
             quantity=self.quantity,
-            rng=self.rng,
+            rng=trader.strategy_rng,
         )
         

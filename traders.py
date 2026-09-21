@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from strategies import Strategy
+    from simulation import Simulation
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum, auto
@@ -16,7 +17,7 @@ import mesa
 
 @dataclass(eq=False)
 class Trader(mesa.Agent):
-    model: mesa.Model
+    model: Simulation
     trader_id: int
     initial_cash: int
     initial_position: int
@@ -33,10 +34,14 @@ class Trader(mesa.Agent):
     current_cash: int = field(init=False)
     effective_cash: int = field(init=False)
     effective_position: int = field(init=False)
+    strategy_rng: random.Random = field(init=False, repr=False)
+    latency_rng: random.Random = field(init=False, repr=False)
 
 
     def __post_init__(self) -> None:
         super().__init__(self.model)
+        self.strategy_rng = self.model.get_rng("strategy", self.trader_id)
+        self.latency_rng = self.model.get_rng("latency", self.trader_id)
         self.current_cash = self.initial_cash
         self.effective_cash = self.initial_cash
         self.current_position = self.initial_position
@@ -48,7 +53,7 @@ class Trader(mesa.Agent):
         request: Request | None = self.strategy.decide(self, book, timestep) # this should call the strategy
 
         latency: int = max(0, self.latency + 
-                      random.randint(-self.latency_deviation, self.latency_deviation)) # if deviation is big, latency could go below zero meaning it would have a knock on effect
+                      self.latency_rng.randint(-self.latency_deviation, self.latency_deviation)) # if deviation is big, latency could go below zero meaning it would have a knock on effect
         if request is not None:
             request.arrival_time = timestep + latency
         self.next_request_time += latency + 1

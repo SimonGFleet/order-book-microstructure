@@ -34,6 +34,36 @@ A trader becomes eligible to decide again on the timestep after its request’s 
 
 New orders receive a sequential ID and creation timestamp when their requests are generated. After processing requests, the simulation records market and trader snapshots, then advances the timestamp.
 
+## Reproducible simulations
+
+Set the seed once when constructing the simulation:
+
+```python
+sim = Simulation(seed=42)
+
+# Omitting the seed generates one that you can record and reuse.
+sim = Simulation()
+print(sim.seed)
+```
+
+The master seed deterministically derives separate generators for request ordering,
+each trader's strategy decisions, and each trader's latency. Seeds use a versioned
+SHA-256 encoding of the master seed, purpose and trader ID; creating extra traders
+or drawing from another stream does not change an existing stream's sequence.
+Strategies no longer accept a `seed` argument. Traders require a `Simulation` model
+and obtain their generators from it, even when sharing a strategy object.
+
+To replay a run, construct fresh simulation and trader objects with the recorded
+seed, the same configuration, unique trader IDs and insertion order, and the same
+code and Python/dependency versions. Calling `run_sim()` again continues a run;
+assigning `sim.seed` does not reset existing generators or simulation state.
+Old seeded results are not preserved by this new seed derivation scheme.
+
+For parameter comparisons, reuse the seed and trader IDs and keep run lengths equal.
+Changing latency or strategy behaviour can still change the market trajectory and
+which decisions consume random draws. Use multiple master seeds to evaluate effects
+across runs. The example notebooks use seed 42; latency scenarios each run 100,000 steps.
+
 ## Project structure
 
 | File | Purpose |

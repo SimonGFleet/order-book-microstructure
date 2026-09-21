@@ -6,7 +6,6 @@ from order_book import OrderBook
 from traders import Trader
 from models import Order, Request, ReqType, OrdType, Side
 
-import random 
 
 # 1. should i cancel an order - copy in from naive strategy
 # 2. get our current ratio
@@ -22,7 +21,6 @@ class InventoryMM(Strategy):
             target_ratio: float,
             ratio_error: float,
             quantity: int,
-            seed: int | None = None,
             ):
         self.half_spread = half_spread
         self.time_req = time_req
@@ -30,7 +28,6 @@ class InventoryMM(Strategy):
         self.target_ratio = target_ratio
         self.ratio_error = ratio_error
         self.quantity = quantity
-        self.rng = random.Random(seed)
 
     def decide(self, trader: Trader, book: OrderBook, timestamp: int) -> Request | None:
         if book.mid_price is None:
@@ -46,7 +43,7 @@ class InventoryMM(Strategy):
             timestamp=timestamp,
             time_req=self.time_req,
             tolerance=self.tolerance,
-            rng=self.rng,
+            rng=trader.strategy_rng,
         )
         if cancel_request is not None:
             return cancel_request
@@ -71,6 +68,6 @@ class InventoryMM(Strategy):
             bid=bid,
             trader=trader,
             quantity=self.quantity,
-            rng=self.rng,
+            rng=trader.strategy_rng,
             side=side
         )

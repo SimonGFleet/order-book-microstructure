@@ -5,7 +5,6 @@ from models import Request, ReqType, Order, Side, OrdType
 from order_book import OrderBook
 from traders import Trader
 
-import random
 
 class Random(Strategy):
     # should cancel orders, at each step just decide on a fairly trivial action,
@@ -19,7 +18,6 @@ class Random(Strategy):
             max_quantity: int,
             max_price_offset: int,
             reference_price: int,
-            seed: int | None = None,
     ):
         if not 0 <= cancel_probability <= 1:
             raise ValueError("Invalid cancel probability")
@@ -47,7 +45,6 @@ class Random(Strategy):
         self.max_quantity = max_quantity            # in current setting, expectation is n / 2
         self.max_price_offset = max_price_offset    # expectation is best_price
         self.reference_price = reference_price
-        self.rng = random.Random(seed)
 
 
 
@@ -55,7 +52,7 @@ class Random(Strategy):
         '''
         Chooses a float in [0, 1], then based on the assigned probabilities we either attempt to buy or sell
         Same for market order'''
-        cancel = self.rng.random() # cancel checker.
+        cancel = trader.strategy_rng.random() # cancel checker.
         if cancel < self.cancel_prob:
             # choose a random order to cancel out of the open orders?
             a = len(trader.open_asks)
@@ -63,7 +60,7 @@ class Random(Strategy):
             if a + b == 0:
                 return None
             
-            n = self.rng.randint(0, a+b-1)
+            n = trader.strategy_rng.randint(0, a+b-1)
             if n >= a:
                 n -= a
                 return Request(req_type=ReqType.CANCEL, order=trader.open_bids[n])
@@ -72,11 +69,11 @@ class Random(Strategy):
 
 
 
-        action = self.rng.random() # buy/sell/wait
-        type_prob = self.rng.random() # market/limit
+        action = trader.strategy_rng.random() # buy/sell/wait
+        type_prob = trader.strategy_rng.random() # market/limit
 
-        desired_quantity = self.rng.randint(1, self.max_quantity) # if we are trading: how much?
-        deviation = self.rng.randint(-self.max_price_offset, self.max_price_offset) # what price
+        desired_quantity = trader.strategy_rng.randint(1, self.max_quantity) # if we are trading: how much?
+        deviation = trader.strategy_rng.randint(-self.max_price_offset, self.max_price_offset) # what price
         
         ord_type = OrdType.LIMIT if type_prob < self.limit_prob else OrdType.MARKET
         if action < self.buy_prob: # attempt to buy
