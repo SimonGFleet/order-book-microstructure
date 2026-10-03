@@ -86,3 +86,12 @@ class TraderSnapshot:
     effective_position: int
     wealth: float                # wealth is current_cash + current_position * estimated price (mid_price or best_bid/ask if only one)
     pnl: float                    # this is the change in wealth from the start
+
+
+
+@dataclass
+class TraderResults:
+    total_pnl: float
+    avg_pnl: float          # simply just pnl / timesteps
+    sharpe_ratio: float
+    drawdown: float         # biggest loss from a trade. hard to calculate since there is no tracking for this really.
