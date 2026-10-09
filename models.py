@@ -85,13 +85,20 @@ class TraderSnapshot:
     effective_cash: int
     effective_position: int
     wealth: float                # wealth is current_cash + current_position * estimated price (mid_price or best_bid/ask if only one)
-    pnl: float                    # this is the change in wealth from the start
+    pnl: float                   # this is the change in wealth from the start
 
 
 
 @dataclass
 class TraderResults:
+    '''At the end of running a simulation we should be able to 
+    get the results for how an individual trader has performed.
+    This gives us some details for how well a trader has performed'''
     total_pnl: float
     avg_pnl: float          # simply just pnl / timesteps
-    sharpe_ratio: float
-    drawdown: float         # biggest loss from a trade. hard to calculate since there is no tracking for this really.
+    sharpe_ratio: float | None
+    drawdown: float | None  
+    buy_and_hold_pnl: float
+    excess_pnl: float  
+
+    

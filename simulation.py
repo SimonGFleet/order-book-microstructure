@@ -1,6 +1,7 @@
 from order_book import OrderBook
 from traders import Trader
-from models import MatchResult, Order, OrdType, Request, ReqType, Side, Trade, SimulationSnapshot, TraderSnapshot
+from models import MatchResult, Order, OrdType, Request, ReqType, Side, Trade, SimulationSnapshot, TraderSnapshot, TraderResults
+from results_analysis_functions import sharpe_ratio, max_drawdown
 
 from collections import deque
 import random
@@ -41,9 +42,6 @@ class Simulation(mesa.Model):
         if key not in self._random_streams:
             self._random_streams[key] = random.Random(self._derive_seed(purpose, trader_id))
         return self._random_streams[key]
-
-
-
 
 
 
@@ -176,6 +174,11 @@ class Simulation(mesa.Model):
 
 
     def run_sim(self, steps: int) -> None:
+
+        for trader in self.traders.values():
+            if not trader.snapshots:
+                trader.snapshots.append(self.get_trader_snapshot(trader))
+
         # at each step we call get_requests and apply_request
         for i in range(steps):
             trades_before = len(self.book.trades)
@@ -188,12 +191,12 @@ class Simulation(mesa.Model):
             self.apply_requests()
 
             
+            self.timestamp += 1
 
             # Create snapshots
             self.sim_history.append(self.get_sim_snapshot(trades_before=trades_before))
             self.get_traders_snapshot()  # appends individual snapshots to each trader
-        
-            self.timestamp += 1
+                 
 
 
 
@@ -248,3 +251,30 @@ class Simulation(mesa.Model):
         for trader_id in self.traders:
             trader = self.traders[trader_id]
             trader.snapshots.append(self.get_trader_snapshot(trader))
+
+
+    def results_for_trader(self, trader_id: int) -> TraderResults:
+        trader = self.traders[trader_id]
+        total_pnl = trader.snapshots[-1].pnl
+
+        wealths = [snapshot.wealth for snapshot in trader.snapshots]
+        final_snapshot = self.sim_history[-1]
+        best_bid = final_snapshot.best_bid
+        best_ask = final_snapshot.best_ask
+        if best_bid is not None and best_ask is not None:
+            final_price = (best_bid + best_ask) / 2
+        elif best_bid is not None:
+            final_price = best_bid
+        elif best_ask is not None:
+            final_price = best_ask
+        else:
+            final_price = self.initial_price
+        buy_and_hold_pnl = (trader.initial_position * (final_price - self.initial_price))
+        return TraderResults(
+            total_pnl=total_pnl,
+            avg_pnl=total_pnl / self.timestamp,
+            sharpe_ratio=sharpe_ratio(wealths),
+            drawdown=max_drawdown(wealths),
+            buy_and_hold_pnl=buy_and_hold_pnl,
+            excess_pnl = total_pnl - buy_and_hold_pnl,
+        )

@@ -73,8 +73,8 @@ across runs. The example notebooks use seed 42; latency scenarios each run 100,0
 | `traders.py` | Trader state and strategy integration |
 | `strategies` | Folder to hold strategies for traders |
 | `models.py` | Stores common objects for other files to import |
-| `example.ipynb` | Interactive experimentation |
-| `test_*.py` | Automated tests |
+| `notebooks/` | Example and exploratory notebooks |
+| `tests/` | Automated tests, including live-data and strategy tests |
 
 ## Running the tests
 
@@ -85,5 +85,5 @@ python -m pytest -v
 To experiment with the included notebook, run:
 
 ```bash
-jupyter lab example.ipynb
+jupyter lab notebooks/random_example.ipynb
 ```
