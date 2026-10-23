@@ -1,9 +1,7 @@
 from coinbase.websocket import WSClient
 import threading
-from collections import deque
 from queue import Queue 
 import json
-from decimal import Decimal
 import storage
 import sqlite3
 from datetime import datetime, timezone
@@ -20,6 +18,8 @@ class dataReceiver:
         self.message_id: int = 0
 
         self.messages: Queue = Queue()
+        self.batches: Queue = Queue()
+        self.worker_errors: Queue = Queue()
         self.batch: list = []
         self.batch_size: int = batch_size
 
@@ -54,7 +54,7 @@ class dataReceiver:
             client.close()
 
 
-    def process_message(self, msg: dict, connection):
+    def process_message(self, msg: dict):
         # message should have a channel, we want to process is == "l2_data"
         
         if msg.get("channel") != "l2_data":
@@ -80,22 +80,65 @@ class dataReceiver:
                 )
                 self.batch.append(row)
                 if len(self.batch) >= self.batch_size:
-                    storage.insert_events_batch(connection, self.batch)
-                    self.batch.clear()
+                    self.batches.put(self.batch)
+                    self.batch = []
 
 
             event_index += 1
         
-        pass
-
     def process_updates(self):
-        '''
-        Establishes connection to the database, adds in a session row
-        then tries to process each message'''
-        connection = sqlite3.connect("market_data.db")
-
+        '''Process messages and hand completed batches to the SQL writer.'''
         try:
-            # Create the session row
+            while True:
+                msg = self.messages.get()
+                try:
+                    # we send in None as the last message after closing coinbase connection
+                    if msg is None:
+                        break
+                    self.process_message(msg)
+
+                finally:
+                    self.messages.task_done()   # need to tell the thread its finished
+
+            if self.batch:
+                self.batches.put(self.batch)
+                self.batch = []
+
+        except Exception as exc:
+            self.worker_errors.put(exc)
+
+        finally:
+            # Stop the writer only after handing over the final batch.
+            self.batches.put(None)
+
+    def save_batches(self):
+        '''Write queued batches using a connection owned by this thread.'''
+        connection = None
+        try:
+            connection = sqlite3.connect("market_data.db")
+            while True:
+                batch = self.batches.get()
+                try:
+                    if batch is None:
+                        break
+                    storage.insert_events_batch(connection, batch)
+                finally:
+                    self.batches.task_done()
+
+        except Exception as exc:
+            self.worker_errors.put(exc)
+
+        finally:
+            if connection is not None:
+                connection.close()
+
+
+
+    def run(self):
+        '''Starts processing and SQL writer threads, then fetches updates;
+        type stop to end the collection'''
+        connection = sqlite3.connect("market_data.db")
+        try:
             self.session_id = storage.insert_session(
                 connection,
                 (
@@ -104,31 +147,12 @@ class dataReceiver:
                     datetime.now(timezone.utc).isoformat(),
                 ),
             )
-
-            while True:
-                msg = self.messages.get()
-                try:
-                    # we send in None as the last message after closing coinbase connection
-                    if msg is None:
-                        break
-                    self.process_message(msg, connection)
-
-                finally:
-                    self.messages.task_done()   # need to tell the thread its finished
-
-            if self.batch:
-                storage.insert_events_batch(connection=connection, batch=self.batch)
-                self.batch.clear()
-
         finally:
             connection.close()
 
-
-
-    def run(self):
-        '''Starts the processing thread then starts fetch updates,
-        type stop to end the collection'''
+        writer = threading.Thread(target=self.save_batches)
         processor = threading.Thread(target=self.process_updates)
+        writer.start()
         processor.start()
 
         try:
@@ -137,7 +161,10 @@ class dataReceiver:
         finally:
             self.messages.put(None)
             processor.join()
-            finish = datetime.now(timezone.utc).isoformat()
+            writer.join()
+
+        if not self.worker_errors.empty():
+            raise RuntimeError("Data collection failed") from self.worker_errors.get()
 
         connection = sqlite3.connect("market_data.db")
         try:
@@ -145,7 +172,7 @@ class dataReceiver:
             print(f"Session {self.session_id}: {count} rows saved.")
             snapshot_count = storage.count_session_rows(connection, self.session_id, "snapshot")
             update_count = storage.count_session_rows(connection, self.session_id, "update")
-            print(snapshot_count, update_count)
+            print(f"Snapshots: {snapshot_count}, Rows: {update_count}")
             storage.finish_collection(connection, session_id=self.session_id, 
                                            snapshot_count=snapshot_count, 
                                            update_count=update_count,
