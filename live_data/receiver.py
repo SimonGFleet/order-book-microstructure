@@ -134,7 +134,7 @@ class dataReceiver:
 
 
 
-    def run(self):
+    def run(self, live_plot=True):
         '''Starts processing and SQL writer threads, then fetches updates;
         type stop to end the collection'''
         connection = sqlite3.connect("market_data.db")
